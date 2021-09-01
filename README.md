@@ -1,1 +1,3 @@
-# Holysheet - Extensible JavaScript spreadsheet
+# Holysheet
+
+An extensible JavaScript spreadsheet.

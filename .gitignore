@@ -1,0 +1,15 @@
+*.log
+
+.*-tmp
+.*-cache
+.DS_Store
+.git
+.idea
+.tmp
+
+_site
+
+node_modules
+dist
+
+/backup
