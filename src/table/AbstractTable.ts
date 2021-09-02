@@ -532,6 +532,10 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
           targetCellIndex++;
         }
       });
+
+      const copyProps = omit(row, ['id', 'cells']);
+
+      Object.keys(copyProps).forEach(prop => (rows[ri][prop] = copyProps[prop]));
     });
 
     this.rows.splice(this.selection.range[1], rows.length, ...rows);
