@@ -1,2 +1,2 @@
 export * from './table';
-export { default } from './HolySheet';
+export { Holysheet as default } from './spreadsheet';

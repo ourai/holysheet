@@ -312,11 +312,11 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const {
-        coordinate,
-        span = [],
-        ...others
-      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
+      const { coordinate, span = [], ...others } = omit(cell, [
+        '__meta',
+        'id',
+        'mergedCoord',
+      ]) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 
@@ -776,47 +776,49 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
       this.removeCells(row.cells);
     });
 
-    if (startRowIndex > 0) {
-      let noRowSpanCellRowIndex = startRowIndex - 1;
+    if (this.getRowCount() > 0) {
+      if (startRowIndex > 0) {
+        let noRowSpanCellRowIndex = startRowIndex - 1;
 
-      while (this.rows[noRowSpanCellRowIndex].cells.length !== this.getColumnCount()) {
-        noRowSpanCellRowIndex--;
-      }
+        while (this.rows[noRowSpanCellRowIndex].cells.length !== this.getColumnCount()) {
+          noRowSpanCellRowIndex--;
+        }
 
-      const baseRowindex = noRowSpanCellRowIndex;
+        const baseRowindex = noRowSpanCellRowIndex;
 
-      this.rows.slice(baseRowindex, startRowIndex).forEach((row, ri) => {
-        row.cells.forEach(cellId => {
-          const { span = [] } = this.cells[cellId];
-          const [colSpan = 0, rowSpan = 0] = span;
-          const bottomRowIndex = baseRowindex + ri + rowSpan;
+        this.rows.slice(baseRowindex, startRowIndex).forEach((row, ri) => {
+          row.cells.forEach(cellId => {
+            const { span = [] } = this.cells[cellId];
+            const [colSpan = 0, rowSpan = 0] = span;
+            const bottomRowIndex = baseRowindex + ri + rowSpan;
 
-          if (rowSpan === 0 || bottomRowIndex < startRowIndex) {
-            return;
-          }
+            if (rowSpan === 0 || bottomRowIndex < startRowIndex) {
+              return;
+            }
 
-          delete this.merged[this.cells[cellId].mergedCoord!];
+            delete this.merged[this.cells[cellId].mergedCoord!];
 
-          const newRowSpan =
-            rowSpan -
-            (bottomRowIndex >= endRowIndex ? resolvedCount : bottomRowIndex - startRowIndex + 1);
+            const newRowSpan =
+              rowSpan -
+              (bottomRowIndex >= endRowIndex ? resolvedCount : bottomRowIndex - startRowIndex + 1);
 
-          if (colSpan === 0 && newRowSpan === 0) {
-            delete this.cells[cellId].span;
-            delete this.cells[cellId].mergedCoord;
-          } else {
-            this.cells[cellId].span = [colSpan, newRowSpan];
+            if (colSpan === 0 && newRowSpan === 0) {
+              delete this.cells[cellId].span;
+              delete this.cells[cellId].mergedCoord;
+            } else {
+              this.cells[cellId].span = [colSpan, newRowSpan];
 
-            const [sci, sri, eci] = getIndexCoord(this.cells[cellId].mergedCoord!);
-            const range: TableRange = [sci, sri, eci, sri + newRowSpan];
-            const mergedCoord = getTitleCoord(...range);
+              const [sci, sri, eci] = getIndexCoord(this.cells[cellId].mergedCoord!);
+              const range: TableRange = [sci, sri, eci, sri + newRowSpan];
+              const mergedCoord = getTitleCoord(...range);
 
-            this.cells[cellId].mergedCoord = mergedCoord;
+              this.cells[cellId].mergedCoord = mergedCoord;
 
-            this.merged[mergedCoord] = range;
-          }
+              this.merged[mergedCoord] = range;
+            }
+          });
         });
-      });
+      }
 
       this.rows.slice(startRowIndex, this.getRowCount()).forEach((row, ri) => {
         row.cells.forEach(cellId => {
