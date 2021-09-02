@@ -552,9 +552,16 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
 
     this.columns.splice(colIndex, 0, ...this.createColumns(count));
 
-    this.rows.forEach((row, ri) =>
-      row.cells.splice(colIndex, 0, ...(this.createCells(ri, colIndex, count) as CellId[])),
-    );
+    this.rows.forEach((row, ri) => {
+      row.cells.splice(colIndex, 0, ...(this.createCells(ri, colIndex, count) as CellId[]));
+
+      row.cells
+        .slice(colIndex + count)
+        .forEach(
+          cellId =>
+            (this.cells[cellId].__meta.colIndex = this.cells[cellId].__meta.colIndex + count),
+        );
+    });
 
     return { success: true };
   }
@@ -706,6 +713,15 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
     }
 
     this.rows.splice(rowIndex, 0, ...this.createRows(rowIndex, count, this.getColumnCount()));
+
+    this.rows
+      .slice(rowIndex + count)
+      .forEach(({ cells }) =>
+        cells.forEach(
+          cellId =>
+            (this.cells[cellId].__meta.rowIndex = this.cells[cellId].__meta.rowIndex + count),
+        ),
+      );
 
     return { success: true };
   }
