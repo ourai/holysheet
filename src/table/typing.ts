@@ -69,7 +69,7 @@ interface Result {
   message?: string;
 }
 
-interface Table extends IEventEmitter<TableEvents> {
+interface ITable extends IEventEmitter<TableEvents> {
   getCell(id: CellId): TableCell;
   getCell(colIndex: number, rowIndex: number): TableCell;
   getCell(colTitle: string, rowTitle: string): TableCell;
@@ -136,7 +136,7 @@ export {
   RowMapFn,
   TableEvents,
   Result,
-  Table,
+  ITable,
   CellCreator,
   RowCreator,
   TableInitializer,

@@ -5,6 +5,7 @@ export {
   TableRow,
   TableRange,
   TableSelection,
-  Table,
+  ITable,
+  TableInitializer,
 } from './typing';
-export { default as AbstractTable } from './AbstractTable';
+export { default } from './AbstractTable';

@@ -17,14 +17,14 @@ import {
   RowMapFn,
   TableEvents,
   Result,
-  Table,
+  ITable,
   CellCreator,
   RowCreator,
   TableInitializer,
 } from './typing';
 import { getColTitle, getColIndex, getTitleCoord, getIndexCoord } from './helper';
 
-class AbstractTable extends EventEmitter<TableEvents> implements Table {
+class AbstractTable extends EventEmitter<TableEvents> implements ITable {
   private readonly cellCreator: CellCreator;
   private readonly rowCreator: RowCreator;
 
@@ -312,11 +312,11 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const { coordinate, span = [], ...others } = omit(cell, [
-        '__meta',
-        'id',
-        'mergedCoord',
-      ]) as CellData;
+      const {
+        coordinate,
+        span = [],
+        ...others
+      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 
