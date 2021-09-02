@@ -560,7 +560,7 @@ class AbstractTable extends EventEmitter<TableEvents> implements Table {
 
     this.columns.splice(startColIndex, resolvedCount);
 
-    if (startColIndex > 0) {
+    if (this.getColumnCount() > 0) {
       const endColIndex = startColIndex + resolvedCount - 1;
 
       this.rows.forEach((row, ri) => {
