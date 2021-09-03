@@ -312,11 +312,11 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const {
-        coordinate,
-        span = [],
-        ...others
-      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
+      const { coordinate, span = [], ...others } = omit(cell, [
+        '__meta',
+        'id',
+        'mergedCoord',
+      ]) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 
@@ -402,6 +402,35 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     this.selection = null;
   }
 
+  public getRowsInRange(): TableRow[] {
+    return this.getTableRows(this.getInternalRowsInRange());
+  }
+
+  public getCellsInRange(): TableCell[] {
+    if (!this.selection) {
+      return [];
+    }
+
+    const cellsInRange: TableCell[] = [];
+    const [sci, _, eci] = this.selection.range;
+
+    this.getRowsInRange().forEach(({ cells }) =>
+      cells.forEach(cell => {
+        const [colIndex] = this.getCellCoordinate(cell.id);
+
+        if (colIndex >= sci && colIndex <= eci) {
+          cellsInRange.push(cell);
+        }
+      }),
+    );
+
+    return cellsInRange;
+  }
+
+  public getModifiedCellsInRange(): TableCell[] {
+    return this.getCellsInRange().filter(({ id }) => this.isCellModified(id));
+  }
+
   public getMergedInRange(): string[] {
     return this.selection
       ? Object.keys(this.merged).filter(coord => {
@@ -411,10 +440,6 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
           return msci >= sci && msri >= sri && meci <= eci && meri <= eri;
         })
       : [];
-  }
-
-  public getRowsInRange(): TableRow[] {
-    return this.getTableRows(this.getInternalRowsInRange());
   }
 
   public mergeCells(): Result {

@@ -98,8 +98,10 @@ interface ITable extends IEventEmitter<TableEvents> {
   getSelection(): TableSelection | null;
   setSelection(selection: TableSelection): void;
   clearSelection(): void;
-  getMergedInRange(): string[];
   getRowsInRange(): TableRow[];
+  getCellsInRange(): TableCell[];
+  getModifiedCellsInRange(): TableCell[];
+  getMergedInRange(): string[];
   mergeCells(): Result;
   unmergeCells(): Result;
   insertColumn(colIndex: number, count?: number): Result;
