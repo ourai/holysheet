@@ -115,6 +115,11 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     return omit(this.cells[cellId], ['__meta']);
   }
 
+  protected setCellCoordinate(id: CellId, colIndex: number, rowIndex: number): void {
+    this.cells[id].__meta.colIndex = colIndex;
+    this.cells[id].__meta.rowIndex = rowIndex;
+  }
+
   protected createColumns(colCount: number): InternalColumn[] {
     const cols: InternalColumn[] = [];
 

@@ -30,6 +30,25 @@ class Sheet extends AbstractTable implements ISheet {
       : [];
   }
 
+  private updateCellCoordinate(id: CellId, colIndex: number, rowIndex: number): void {
+    this.setCellCoordinate(id, colIndex, rowIndex);
+
+    const { span = [], mergedCoord } = this.cells[id] as InternalSheetCell;
+    const [colSpan = 0, rowSpan = 0] = span;
+
+    if (colSpan === 0 && rowSpan === 0) {
+      return;
+    }
+
+    const range: SheetRange = [colIndex, rowIndex, colIndex + colSpan, rowIndex + rowSpan];
+    const newMergedCoord = getTitleCoord(...range);
+
+    (this.cells[id] as InternalSheetCell).mergedCoord = newMergedCoord;
+
+    delete this.merged[mergedCoord!];
+    this.merged[newMergedCoord] = range;
+  }
+
   constructor({ name, ...others }: SheetInitializer) {
     super(others);
 
@@ -339,9 +358,12 @@ class Sheet extends AbstractTable implements ISheet {
 
       row.cells
         .slice(colIndex + count)
-        .forEach(
-          cellId =>
-            (this.cells[cellId].__meta.colIndex = this.cells[cellId].__meta.colIndex + count),
+        .forEach(cellId =>
+          this.updateCellCoordinate(
+            cellId,
+            (this.getCellCoordinate(cellId)[0] as number) + count,
+            ri,
+          ),
         );
     });
 
@@ -496,14 +518,13 @@ class Sheet extends AbstractTable implements ISheet {
 
     this.rows.splice(rowIndex, 0, ...this.createRows(rowIndex, count, this.getColumnCount()));
 
-    this.rows
-      .slice(rowIndex + count)
-      .forEach(({ cells }) =>
-        cells.forEach(
-          cellId =>
-            (this.cells[cellId].__meta.rowIndex = this.cells[cellId].__meta.rowIndex + count),
-        ),
-      );
+    this.rows.slice(rowIndex + count).forEach(({ cells }) =>
+      cells.forEach(cellId => {
+        const [colIndex, rowIndex] = this.getCellCoordinate(cellId) as [number, number];
+
+        this.updateCellCoordinate(cellId, colIndex, rowIndex + count);
+      }),
+    );
 
     return { success: true };
   }
