@@ -12,7 +12,7 @@ import {
 const DEFAULT_COL_COUNT = 26;
 const DEFAULT_ROW_COUNT = 100;
 
-function getDefaultContextMenuItems(inst: Spreadsheet): ContextMenuItem[] {
+function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
   return [
     {
       key: 'insert-column-left',
@@ -29,7 +29,7 @@ function getDefaultContextMenuItems(inst: Spreadsheet): ContextMenuItem[] {
     {
       key: 'delete-selected-columns',
       title: () => '删除列',
-      // available: mode => mode === 'col-title' && this.activeTable.getColumnCount() > 1,
+      available: mode => mode === 'col-title' && inst.sheet.getColumnCount() > 1,
       // handler: data => {
       //   const { sci, eci } = data.selector.range;
 
@@ -59,7 +59,7 @@ function getDefaultContextMenuItems(inst: Spreadsheet): ContextMenuItem[] {
     {
       key: 'delete-selected-rows',
       title: () => '删除行',
-      // available: mode => mode === 'row-title' && this.activeTable.getRowCount() > 1,
+      available: mode => mode === 'row-title' && inst.sheet.getRowCount() > 1,
       // handler: data => {
       //   const { sri, eri } = data.selector.range;
 

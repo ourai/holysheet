@@ -19,6 +19,8 @@ export default class HolysheetDemo extends Vue {
     this.hs.mount('#holysheet');
 
     this.hs.on({
+      'cell-change': cell => console.log(`cell ${cell.id} selected`, cell),
+      'range-change': range => console.log(`range [${range.join(',')}] selected`, range),
       'width-change': ({ index, width }) =>
         console.log(`column ${index} width changed to ${width}`),
       'height-change': ({ index, height }) =>

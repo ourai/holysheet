@@ -1,6 +1,6 @@
 type MountEl = HTMLElement | string;
 
-type SpreadsheetEvents = 'width-change' | 'height-change';
+type SpreadsheetEvents = 'cell-change' | 'range-change' | 'width-change' | 'height-change';
 
 interface ColumnOptions {
   count?: number;
