@@ -1,11 +1,13 @@
 export {
-  CellData,
+  CellId,
+  CellMeta,
+  InternalCell,
+  InternalRow,
   TableCell,
   TableColumn,
   TableRow,
-  TableRange,
-  TableSelection,
   ITable,
   TableInitializer,
 } from './typing';
+export { getColumnTitle, getColumnIndex } from './helper';
 export { default } from './AbstractTable';

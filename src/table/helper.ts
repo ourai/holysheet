@@ -1,5 +1,3 @@
-import { TableRange } from './typing';
-
 const CHAR_BASIS = 'A'.charCodeAt(0);
 const BASE_MAX = 26;
 
@@ -10,11 +8,11 @@ function convertNumberToName(num: number): string {
         convertNumberToName(num % BASE_MAX || BASE_MAX);
 }
 
-function getColTitle(index: number): string {
+function getColumnTitle(index: number): string {
   return convertNumberToName(index + 1);
 }
 
-function getColIndex(title: string): number {
+function getColumnIndex(title: string): number {
   let index = -1;
 
   for (let i = 0; i < title.length; i++) {
@@ -24,31 +22,4 @@ function getColIndex(title: string): number {
   return index;
 }
 
-function getTitleCoord(
-  colIndex: number,
-  rowIndex: number,
-  endColIndex?: number,
-  endRowIndex?: number,
-): string {
-  let coord: string = `${getColTitle(colIndex)}${rowIndex + 1}`;
-
-  if (endColIndex !== undefined && endRowIndex !== undefined) {
-    coord += `:${getTitleCoord(endColIndex, endRowIndex)}`;
-  }
-
-  return coord;
-}
-
-function getIndexCoord(titleCoord: string): TableRange {
-  const range: number[] = [];
-
-  titleCoord.split(':').forEach(title => {
-    const matched = title.match(/([A-Z]+)([0-9]+)/)!;
-
-    range.push(getColIndex(matched[1]), Number(matched[2]) - 1);
-  });
-
-  return range as TableRange;
-}
-
-export { getColTitle, getColIndex, getTitleCoord, getIndexCoord };
+export { getColumnTitle, getColumnIndex };

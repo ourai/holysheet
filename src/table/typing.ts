@@ -15,12 +15,6 @@ interface InternalCell {
   __meta: CellMeta;
   id: CellId;
   span?: [ColSpan, RowSpan];
-  mergedCoord?: string;
-}
-
-interface CellData extends Omit<InternalCell, '__meta' | 'id' | 'mergedCoord'> {
-  coordinate: [number, number] | [string, string];
-  [key: string]: any;
 }
 
 interface TableCell extends Omit<InternalCell, '__meta'> {}
@@ -48,26 +42,13 @@ interface TableRow extends Omit<InternalRow, 'cells'> {
 
 type StartColIndex = number;
 type StartRowIndex = number;
-type EndColIndex = number;
-type EndRowIndex = number;
 
 type CellCoordinate = [StartColIndex, StartRowIndex] | [string, string];
-type TableRange = [StartColIndex, StartRowIndex, EndColIndex, EndRowIndex];
-
-interface TableSelection {
-  cell: TableCell | null;
-  range: TableRange;
-}
 
 type RowFilter = (row: TableRow, index: number) => boolean;
 type RowMapFn<T> = (row: TableRow, index: number) => T;
 
 type TableEvents = 'cell-update' | 'cell-change' | 'row-update' | 'row-change';
-
-interface Result {
-  success: boolean;
-  message?: string;
-}
 
 interface ITable extends IEventEmitter<TableEvents> {
   getCell(id: CellId): TableCell;
@@ -94,22 +75,6 @@ interface ITable extends IEventEmitter<TableEvents> {
     propertyName: string,
     propertyValue: any,
   ): void;
-  fill(cells: CellData[]): void;
-  getSelection(): TableSelection | null;
-  setSelection(selection: TableSelection): void;
-  clearSelection(): void;
-  getRowsInRange(): TableRow[];
-  getCellsInRange(): TableCell[];
-  getModifiedCellsInRange(): TableCell[];
-  getMergedInRange(): string[];
-  mergeCells(): Result;
-  unmergeCells(): Result;
-  insertColumn(colIndex: number, count?: number): Result;
-  deleteColumns(startColIndex: number, count?: number): Result;
-  deleteColumnsInRange(): Result;
-  insertRow(rowIndex: number, count?: number): Result;
-  deleteRows(startRowIndex: number, count?: number): Result;
-  deleteRowsInRange(): Result;
 }
 
 type CellCreator = () => Omit<TableCell, 'id'>;
@@ -124,20 +89,17 @@ interface TableInitializer {
 
 export {
   CellId,
+  CellMeta,
   InternalCell,
-  CellData,
   TableCell,
   InternalColumn,
   TableColumn,
   InternalRow,
   TableRow,
   CellCoordinate,
-  TableRange,
-  TableSelection,
   RowFilter,
   RowMapFn,
   TableEvents,
-  Result,
   ITable,
   CellCreator,
   RowCreator,
