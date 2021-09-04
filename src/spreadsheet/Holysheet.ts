@@ -1,9 +1,18 @@
 import EventEmitter from '@ntks/event-emitter';
 import XSpreadsheet from '@wotaware/x-spreadsheet';
 
-import { TableCell, TableRow, TableRange, ITable, ISheet, Sheet } from '../sheet';
+import {
+  CellId,
+  TableCell,
+  TableRow,
+  TableRange,
+  ITable,
+  SheetData,
+  ISheet,
+  Sheet,
+} from '../sheet';
 
-import { SpreadsheetOptions, ResolvedOptions, Spreadsheet } from './typing';
+import { MountEl, SpreadsheetOptions, ResolvedOptions, Spreadsheet } from './typing';
 import { resolveOptions, createXSpreadsheetInstance } from './helper';
 
 class Holysheet extends EventEmitter implements Spreadsheet {
@@ -24,6 +33,29 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
   private rowChosen: boolean = false;
   private colChosen: boolean = false;
+
+  private setCurrentSheet(index: number = 0): void {
+    const prevSheet = this.sheet;
+    const prevTable = this.table;
+
+    if (prevTable) {
+      prevTable.clearSelection();
+      prevTable.off();
+    }
+
+    this.sheet = this.sheets[index];
+
+    if (!this.sheet.hasTable()) {
+      const table = this.sheet.createTable({
+        columnCount: this.options.column.count!,
+        rowCount: this.options.row.count!,
+      });
+
+      table.on('cell-update', cell => this.emit('cell-update', cell));
+    }
+
+    this.table = this.sheet.getTable()!;
+  }
 
   private clearRowAndColStatus(): void {
     this.rowChosen = false;
@@ -85,18 +117,42 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     }
   }
 
+  private createXSpreadsheetInstance(elementOrSelector: MountEl): void {
+    const xs = createXSpreadsheetInstance(elementOrSelector, this.options);
+
+    xs.on('cell-selected', (_, rowIndex, colIndex) => this.handleCellChoose(colIndex, rowIndex));
+
+    xs.on('cells-selected', (_, { sci, sri, eci, eri }) =>
+      this.handleRangeChoose([sci, sri, eci, eri]),
+    );
+
+    xs.on('width-resized', (ci, width) => {
+      this.table.setColumnWidth(ci, width);
+      this.emit('width-change', { index: ci, width });
+    });
+
+    xs.on('height-resized', (ri, height) => {
+      this.table.setRowHeight(ri, height);
+      this.emit('height-change', { index: ri, height });
+    });
+
+    this.xs = xs;
+  }
+
   constructor({ el, ...others }: SpreadsheetOptions = {}) {
     super();
 
     this.options = resolveOptions(this, others);
 
     if (el) {
-      this.xs = createXSpreadsheetInstance(el, this.options);
+      this.createXSpreadsheetInstance(el);
     }
   }
 
-  public getSelectedRows(): TableRow[] {
-    return this.chosenRows;
+  public mount(elementOrSelector: HTMLElement | string): void {
+    if (!this.xs) {
+      this.createXSpreadsheetInstance(elementOrSelector);
+    }
   }
 
   public select(
@@ -123,38 +179,34 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     }
   }
 
-  public mount(elementOrSelector: HTMLElement | string): void {
-    if (this.xs) {
-      return;
-    }
+  public getSelectedRows(): TableRow[] {
+    return this.chosenRows;
+  }
 
-    const sheet = new Sheet({ name: 'sheet' });
-    const table = sheet.createTable({
-      columnCount: this.options.column.count!,
-      rowCount: this.options.row.count!,
-    });
-
-    const xs = createXSpreadsheetInstance(elementOrSelector, this.options);
-
-    xs.on('cell-selected', (_, rowIndex, colIndex) => this.handleCellChoose(colIndex, rowIndex));
-
-    xs.on('cells-selected', (_, { sci, sri, eci, eri }) =>
-      this.handleRangeChoose([sci, sri, eci, eri]),
+  public setSheets(sheets: SheetData[]): void {
+    const sheetMap: Record<string, ISheet> = this.sheets.reduce(
+      (prev, sheet) => ({ ...prev, [sheet.getId()]: sheet }),
+      {},
     );
 
-    xs.on('width-resized', (ci, width) => {
-      table.setColumnWidth(ci, width);
-      this.emit('width-change', { index: ci, width });
-    });
+    this.sheets = sheets.map(sheet =>
+      sheet.id && sheetMap[sheet.id] ? sheetMap[sheet.id] : new Sheet(sheet),
+    );
 
-    xs.on('height-resized', (ri, height) => {
-      table.setRowHeight(ri, height);
-      this.emit('height-change', { index: ri, height });
-    });
+    this.setCurrentSheet();
+    this.emit(
+      'change',
+      this.sheets.map(sheet => ({ id: sheet.getId(), name: sheet.getName() })),
+    );
+  }
 
-    this.sheet = sheet;
-    this.table = table;
-    this.xs = xs;
+  public changeSheet(index: number): void {
+    this.setCurrentSheet(index);
+    this.emit('sheet-change', index);
+  }
+
+  public updateCell(id: CellId, data: Record<string, any>): void {
+    this.table.setCellProperties(id, data);
   }
 }
 

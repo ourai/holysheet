@@ -1,4 +1,4 @@
-import { TableRow } from '../sheet';
+import { CellId, TableRow, SheetData } from '../sheet';
 
 type MountEl = HTMLElement | string;
 
@@ -27,6 +27,7 @@ interface SpreadsheetOptions {
 type ResolvedOptions = Required<Omit<SpreadsheetOptions, 'el'>>;
 
 interface Spreadsheet {
+  mount(elementOrSelector: MountEl): void;
   getSelectedRows(): TableRow[];
   select(colIndex: number, rowIndex: number): void;
   select(
@@ -35,7 +36,9 @@ interface Spreadsheet {
     endColIndex: number,
     endRowIndex: number,
   ): void;
-  mount(elementOrSelector: MountEl): void;
+  setSheets(sheets: SheetData[]): void;
+  changeSheet(index: number): void;
+  updateCell(id: CellId, data: Record<string, any>): void;
 }
 
 export {

@@ -29,19 +29,8 @@ function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
     {
       key: 'delete-selected-columns',
       title: () => '删除列',
-      available: mode => mode === 'col-title' && inst.sheet.getColumnCount() > 1,
+      available: mode => mode === 'col-title' && inst.table.getColumnCount() > 1,
       // handler: data => {
-      //   const { sci, eci } = data.selector.range;
-
-      //   if (eci - sci + 1 === this.activeTable.getColumnCount()) {
-      //     this.fail(ERROR_MESSAGE.AT_LEAST_ONE_ROW_OR_COLUMN);
-      //   } else if (this.activeTable.getModifiedCellsInRange().length > 0) {
-      //     this.confirm('所选列已存在配置内容，确定是否继续删除？', {
-      //       confirmButtonText: '删除',
-      //     }).then(() => this.deleteColumns());
-      //   } else {
-      //     this.deleteColumns();
-      //   }
       // },
     },
     {
@@ -59,19 +48,8 @@ function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
     {
       key: 'delete-selected-rows',
       title: () => '删除行',
-      available: mode => mode === 'row-title' && inst.sheet.getRowCount() > 1,
+      available: mode => mode === 'row-title' && inst.table.getRowCount() > 1,
       // handler: data => {
-      //   const { sri, eri } = data.selector.range;
-
-      //   if (eri - sri + 1 === this.activeTable.getRowCount()) {
-      //     this.fail(ERROR_MESSAGE.AT_LEAST_ONE_ROW_OR_COLUMN);
-      //   } else if (this.activeTable.getModifiedCellsInRange().length > 0) {
-      //     this.confirm('所选行已存在配置内容，确定是否继续删除？', {
-      //       confirmButtonText: '删除',
-      //     }).then(() => this.deleteRows());
-      //   } else {
-      //     this.deleteRows();
-      //   }
       // },
     },
   ];

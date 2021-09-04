@@ -1,4 +1,5 @@
 export {
+  CellId,
   TableCell,
   CellData,
   TableColumn,
@@ -7,5 +8,5 @@ export {
   TableSelection,
   ITable,
 } from '../table';
-export { ISheet, SheetInitializer } from './typing';
+export { SheetData, ISheet, SheetInitializer } from './typing';
 export { default as Sheet } from './Sheet';

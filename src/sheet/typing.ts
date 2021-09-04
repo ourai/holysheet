@@ -1,6 +1,14 @@
 import { ITable, TableInitializer } from '../table';
 
+type SheetId = string;
+
+interface SheetData {
+  id?: SheetId;
+  name: string;
+}
+
 interface ISheet {
+  getId(): SheetId;
   getName(): string;
   setName(name: string): void;
   getTable(): ITable | null;
@@ -12,4 +20,4 @@ interface SheetInitializer {
   name: string;
 }
 
-export { ISheet, SheetInitializer };
+export { SheetId, SheetData, ISheet, SheetInitializer };

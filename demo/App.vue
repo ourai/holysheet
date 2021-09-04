@@ -27,6 +27,8 @@ export default class HolysheetDemo extends Vue {
         console.log(`row ${index} height changed to ${height}`),
     });
 
+    this.hs.setSheets([{ name: 'holysheet' }]);
+
     this.hs.select(5, 5);
   }
 }
