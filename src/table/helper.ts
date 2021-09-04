@@ -1,3 +1,13 @@
+import { TableCell, InternalRow } from './typing';
+
+function generateCell(): Omit<TableCell, 'id'> {
+  return {};
+}
+
+function generateRow(): Omit<InternalRow, 'id' | 'cells'> {
+  return {};
+}
+
 const CHAR_BASIS = 'A'.charCodeAt(0);
 const BASE_MAX = 26;
 
@@ -22,4 +32,4 @@ function getColumnIndex(title: string): number {
   return index;
 }
 
-export { getColumnTitle, getColumnIndex };
+export { generateCell, generateRow, getColumnTitle, getColumnIndex };

@@ -18,7 +18,7 @@ import {
   RowCreator,
   TableInitializer,
 } from './typing';
-import { getColumnTitle, getColumnIndex } from './helper';
+import { generateCell, generateRow, getColumnTitle, getColumnIndex } from './helper';
 
 class AbstractTable extends EventEmitter<TableEvents> implements ITable {
   private readonly cellCreator: CellCreator;
@@ -156,14 +156,14 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     }));
   }
 
-  constructor({ cellCreator, rowCreator, colCount, rowCount }: TableInitializer) {
+  constructor({ cellCreator, rowCreator, columnCount, rowCount }: TableInitializer) {
     super();
 
-    this.cellCreator = cellCreator;
-    this.rowCreator = rowCreator;
+    this.cellCreator = cellCreator || generateCell;
+    this.rowCreator = rowCreator || generateRow;
 
-    this.columns = this.createColumns(colCount);
-    this.rows = this.createRows(0, rowCount, colCount);
+    this.columns = this.createColumns(columnCount);
+    this.rows = this.createRows(0, rowCount, columnCount);
   }
 
   public getCell(idOrColIndex: CellId | number, rowIndexOrTitle?: number | string): TableCell {

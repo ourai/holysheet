@@ -20,8 +20,17 @@ interface SpreadsheetOptions {
   editable?: boolean;
 }
 
+type ResolvedOptions = Required<Omit<SpreadsheetOptions, 'el'>>;
+
 interface Spreadsheet {
+  select(colIndex: number, rowIndex: number): void;
+  select(
+    startColIndex: number,
+    startRowIndex: number,
+    endColIndex: number,
+    endRowIndex: number,
+  ): void;
   mount(elementOrSelector: MountEl): void;
 }
 
-export { MountEl, SpreadsheetOptions, Spreadsheet };
+export { MountEl, ContextMenuItem, SpreadsheetOptions, ResolvedOptions, Spreadsheet };

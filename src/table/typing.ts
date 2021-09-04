@@ -81,10 +81,10 @@ type CellCreator = () => Omit<TableCell, 'id'>;
 type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
 
 interface TableInitializer {
-  cellCreator: CellCreator;
-  rowCreator: RowCreator;
-  colCount: number;
+  columnCount: number;
   rowCount: number;
+  cellCreator?: CellCreator;
+  rowCreator?: RowCreator;
 }
 
 export {
