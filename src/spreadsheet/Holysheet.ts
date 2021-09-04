@@ -1,11 +1,12 @@
+import EventEmitter from '@ntks/event-emitter';
 import XSpreadsheet from '@wotaware/x-spreadsheet';
 
 import { SheetCell, SheetRange, ISheet, Sheet } from '../sheet';
 
-import { Spreadsheet, SpreadsheetOptions, ResolvedOptions } from './typing';
+import { SpreadsheetEvents, SpreadsheetOptions, ResolvedOptions, Spreadsheet } from './typing';
 import { resolveOptions, createXSpreadsheetInstance } from './helper';
 
-class Holysheet implements Spreadsheet {
+class Holysheet extends EventEmitter<SpreadsheetEvents> implements Spreadsheet {
   private readonly options: ResolvedOptions;
 
   private xs: XSpreadsheet = null as any;
@@ -15,6 +16,8 @@ class Holysheet implements Spreadsheet {
   private sheet: ISheet = null as any;
 
   constructor({ el, ...others }: SpreadsheetOptions = {}) {
+    super();
+
     this.options = resolveOptions(this, others);
 
     if (el) {
@@ -51,13 +54,26 @@ class Holysheet implements Spreadsheet {
       return;
     }
 
-    this.xs = createXSpreadsheetInstance(elementOrSelector, this.options);
-
-    this.sheet = new Sheet({
+    const sheet = new Sheet({
       name: 'sheet',
       columnCount: this.options.column.count!,
       rowCount: this.options.row.count!,
     });
+
+    const xs = createXSpreadsheetInstance(elementOrSelector, this.options);
+
+    xs.on('width-resized', (ci, width) => {
+      sheet.setColumnWidth(ci, width);
+      this.emit('width-change', { index: ci, width });
+    });
+
+    xs.on('height-resized', (ri, height) => {
+      sheet.setRowHeight(ri, height);
+      this.emit('height-change', { index: ri, height });
+    });
+
+    this.sheet = sheet;
+    this.xs = xs;
   }
 }
 

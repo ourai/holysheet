@@ -1,5 +1,7 @@
 type MountEl = HTMLElement | string;
 
+type SpreadsheetEvents = 'width-change' | 'height-change';
+
 interface ColumnOptions {
   count?: number;
   width?: number;
@@ -33,4 +35,11 @@ interface Spreadsheet {
   mount(elementOrSelector: MountEl): void;
 }
 
-export { MountEl, ContextMenuItem, SpreadsheetOptions, ResolvedOptions, Spreadsheet };
+export {
+  MountEl,
+  SpreadsheetEvents,
+  ContextMenuItem,
+  SpreadsheetOptions,
+  ResolvedOptions,
+  Spreadsheet,
+};

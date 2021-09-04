@@ -18,6 +18,13 @@ export default class HolysheetDemo extends Vue {
   private mounted(): void {
     this.hs.mount('#holysheet');
 
+    this.hs.on({
+      'width-change': ({ index, width }) =>
+        console.log(`column ${index} width changed to ${width}`),
+      'height-change': ({ index, height }) =>
+        console.log(`row ${index} height changed to ${height}`),
+    });
+
     this.hs.select(5, 5);
   }
 }
