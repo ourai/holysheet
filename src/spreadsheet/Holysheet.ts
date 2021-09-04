@@ -1,7 +1,7 @@
 import EventEmitter from '@ntks/event-emitter';
 import XSpreadsheet from '@wotaware/x-spreadsheet';
 
-import { SheetCell, SheetRow, SheetRange, ISheet, Sheet } from '../sheet';
+import { TableCell, TableRow, TableRange, ITable, ISheet, Sheet } from '../sheet';
 
 import { SpreadsheetOptions, ResolvedOptions, Spreadsheet } from './typing';
 import { resolveOptions, createXSpreadsheetInstance } from './helper';
@@ -14,11 +14,12 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   private sheets: ISheet[] = [];
 
   private sheet: ISheet = null as any;
+  private table: ITable = null as any;
 
-  private chosenCell: SheetCell | null = null;
-  private chosenRange: SheetRange | null = null;
+  private chosenCell: TableCell | null = null;
+  private chosenRange: TableRange | null = null;
 
-  private chosenRows: SheetRow[] = [];
+  private chosenRows: TableRow[] = [];
   private chosenCols: any[] = [];
 
   private rowChosen: boolean = false;
@@ -32,21 +33,21 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.chosenCols = [];
   }
 
-  private handleRangeChoose(range: SheetRange): void {
+  private handleRangeChoose(range: TableRange): void {
     this.chosenCell = null;
     this.chosenRange = range;
 
-    this.sheet.setSelection({ cell: null, range });
+    this.table.setSelection({ cell: null, range });
     this.clearRowAndColStatus();
 
     const [sci, sri, eci, eri] = range;
 
-    if (sci === 0 && eci === this.sheet.getColumnCount() - 1) {
+    if (sci === 0 && eci === this.table.getColumnCount() - 1) {
       this.rowChosen = true;
-      this.chosenRows = this.sheet.getRowsInRange() as SheetRow[];
+      this.chosenRows = this.table.getRowsInRange() as TableRow[];
     }
 
-    if (sri === 0 && eri === this.sheet.getRowCount() - 1) {
+    if (sri === 0 && eri === this.table.getRowCount() - 1) {
       this.colChosen = true;
     }
 
@@ -57,24 +58,24 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     // `rowIndex` 为 `-1` 是列标题区域，
     // `colIndex` 为 `-1` 是行标题区域
     if (rowIndex === -1 || colIndex === -1) {
-      let range: SheetRange;
+      let range: TableRange;
 
       if (rowIndex === -1) {
-        range = [colIndex, 0, colIndex, this.sheet.getRowCount() - 1];
+        range = [colIndex, 0, colIndex, this.table.getRowCount() - 1];
       } else {
-        range = [0, rowIndex, this.sheet.getColumnCount() - 1, rowIndex];
+        range = [0, rowIndex, this.table.getColumnCount() - 1, rowIndex];
       }
 
       this.handleRangeChoose(range);
     } else {
-      const cell = this.sheet.getCell(colIndex, rowIndex) as SheetCell;
+      const cell = this.table.getCell(colIndex, rowIndex) as TableCell;
 
       this.chosenCell = cell;
       this.chosenRange = null;
 
       const [colSpan = 0, rowSpan = 0] = cell.span || [];
 
-      this.sheet.setSelection({
+      this.table.setSelection({
         cell,
         range: [colIndex, rowIndex, colIndex + colSpan, rowIndex + rowSpan],
       });
@@ -94,24 +95,28 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     }
   }
 
+  public getSelectedRows(): TableRow[] {
+    return this.chosenRows;
+  }
+
   public select(
     colIndex: number,
     rowIndex: number,
     endColIndex?: number,
     endRowIndex?: number,
   ): void {
-    let cell: SheetCell | null;
-    let range: SheetRange;
+    let cell: TableCell | null;
+    let range: TableRange;
 
     if (endColIndex !== undefined && endRowIndex !== undefined) {
       cell = null;
       range = [colIndex, rowIndex, endColIndex, endRowIndex];
     } else {
-      cell = this.sheet.getCell(colIndex, rowIndex) || null;
+      cell = this.table.getCell(colIndex, rowIndex) || null;
       range = [colIndex, rowIndex, colIndex, rowIndex];
     }
 
-    this.sheet.setSelection({ cell, range });
+    this.table.setSelection({ cell, range });
 
     if (cell) {
       (this.xs as any).sheet.selector.set(colIndex, rowIndex);
@@ -123,8 +128,8 @@ class Holysheet extends EventEmitter implements Spreadsheet {
       return;
     }
 
-    const sheet = new Sheet({
-      name: 'sheet',
+    const sheet = new Sheet({ name: 'sheet' });
+    const table = sheet.createTable({
       columnCount: this.options.column.count!,
       rowCount: this.options.row.count!,
     });
@@ -138,16 +143,17 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     );
 
     xs.on('width-resized', (ci, width) => {
-      sheet.setColumnWidth(ci, width);
+      table.setColumnWidth(ci, width);
       this.emit('width-change', { index: ci, width });
     });
 
     xs.on('height-resized', (ri, height) => {
-      sheet.setRowHeight(ri, height);
+      table.setRowHeight(ri, height);
       this.emit('height-change', { index: ri, height });
     });
 
     this.sheet = sheet;
+    this.table = table;
     this.xs = xs;
   }
 }

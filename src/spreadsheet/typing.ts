@@ -1,3 +1,5 @@
+import { TableRow } from '../sheet';
+
 type MountEl = HTMLElement | string;
 
 type SpreadsheetEvents = 'cell-change' | 'range-change' | 'width-change' | 'height-change';
@@ -25,6 +27,7 @@ interface SpreadsheetOptions {
 type ResolvedOptions = Required<Omit<SpreadsheetOptions, 'el'>>;
 
 interface Spreadsheet {
+  getSelectedRows(): TableRow[];
   select(colIndex: number, rowIndex: number): void;
   select(
     startColIndex: number,

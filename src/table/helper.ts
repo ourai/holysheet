@@ -1,35 +1,31 @@
-import { TableCell, InternalRow } from './typing';
+import { getColumnTitle, getColumnIndex } from '../abstract-table';
+import { TableRange } from './typing';
 
-function generateCell(): Omit<TableCell, 'id'> {
-  return {};
-}
+function getTitleCoord(
+  colIndex: number,
+  rowIndex: number,
+  endColIndex?: number,
+  endRowIndex?: number,
+): string {
+  let coord: string = `${getColumnTitle(colIndex)}${rowIndex + 1}`;
 
-function generateRow(): Omit<InternalRow, 'id' | 'cells'> {
-  return {};
-}
-
-const CHAR_BASIS = 'A'.charCodeAt(0);
-const BASE_MAX = 26;
-
-function convertNumberToName(num: number): string {
-  return num <= BASE_MAX
-    ? String.fromCharCode(CHAR_BASIS - 1 + num)
-    : convertNumberToName(~~((num - 1) / BASE_MAX)) +
-        convertNumberToName(num % BASE_MAX || BASE_MAX);
-}
-
-function getColumnTitle(index: number): string {
-  return convertNumberToName(index + 1);
-}
-
-function getColumnIndex(title: string): number {
-  let index = -1;
-
-  for (let i = 0; i < title.length; i++) {
-    index = (index + 1) * BASE_MAX + title.charCodeAt(i) - CHAR_BASIS;
+  if (endColIndex !== undefined && endRowIndex !== undefined) {
+    coord += `:${getTitleCoord(endColIndex, endRowIndex)}`;
   }
 
-  return index;
+  return coord;
 }
 
-export { generateCell, generateRow, getColumnTitle, getColumnIndex };
+function getIndexCoord(titleCoord: string): TableRange {
+  const range: number[] = [];
+
+  titleCoord.split(':').forEach(title => {
+    const matched = title.match(/([A-Z]+)([0-9]+)/)!;
+
+    range.push(getColumnIndex(matched[1]), Number(matched[2]) - 1);
+  });
+
+  return range as TableRange;
+}
+
+export { getTitleCoord, getIndexCoord };
