@@ -26,20 +26,24 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc && rollup -c rollup.config.ts",
-    "start": "rollup -c rollup.config.ts -w",
+    "start": "vue-cli-service serve",
     "prerelease": "npm run build",
     "release": "npm publish"
   },
   "dependencies": {
     "@ntks/event-emitter": "0.0.0",
     "@ntks/toolbox": "0.0.6",
-    "@wotaware/x-spreadsheet": "0.0.1"
+    "@wotaware/x-spreadsheet": "0.0.2"
   },
   "devDependencies": {
     "@ntks/eslint-config": "0.0.0",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.11.1",
+    "@vue/cli-plugin-typescript": "^4.5.9",
+    "@vue/cli-service": "^4.5.9",
     "eslint": "^7.21.0",
+    "less": "^3.8.1",
+    "less-loader": "^4.1.0",
     "lodash": "^4.17.21",
     "prettier": "^2.2.1",
     "rimraf": "^3.0.0",
@@ -50,6 +54,10 @@
     "rollup-plugin-replace": "^2.2.0",
     "rollup-plugin-sourcemaps": "^0.4.2",
     "rollup-plugin-typescript2": "^0.24.2",
-    "typescript": "^3.7.4"
+    "typescript": "^3.7.4",
+    "vue": "^2.6.12",
+    "vue-class-component": "^7.2.6",
+    "vue-property-decorator": "^9.1.2",
+    "vue-template-compiler": "^2.6.12"
   }
 }

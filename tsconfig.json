@@ -16,7 +16,9 @@
     "sourceMap": false,
     "noImplicitAny": false,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "holysheetjs": ["src/index.ts"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "demo"]
 }
