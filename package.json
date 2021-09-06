@@ -24,9 +24,10 @@
   },
   "homepage": "https://github.com/ourai/holysheet#readme",
   "scripts": {
-    "prebuild": "rimraf dist",
-    "build": "tsc && rollup -c rollup.config.ts",
     "start": "vue-cli-service serve",
+    "prebuild": "rimraf dist && mv tsconfig.json tsconfig-tmp.json && node build",
+    "build": "tsc && rollup -c rollup.config.ts",
+    "postbuild": "rimraf tsconfig.json && mv tsconfig-tmp.json tsconfig.json",
     "prerelease": "npm run build",
     "release": "npm publish"
   },
