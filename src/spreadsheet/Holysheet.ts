@@ -12,11 +12,18 @@ import {
   Sheet,
 } from '../sheet';
 
-import { MountEl, SpreadsheetOptions, ResolvedOptions, Spreadsheet } from './typing';
+import {
+  MountEl,
+  RenderCellResolver,
+  SpreadsheetOptions,
+  ResolvedOptions,
+  Spreadsheet,
+} from './typing';
 import { resolveOptions, createXSpreadsheetInstance } from './helper';
 
 class Holysheet extends EventEmitter implements Spreadsheet {
   private readonly options: ResolvedOptions;
+  private readonly renderCellResolver: RenderCellResolver;
 
   private xs: XSpreadsheet = null as any;
 
@@ -139,10 +146,11 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.xs = xs;
   }
 
-  constructor({ el, ...others }: SpreadsheetOptions = {}) {
+  constructor({ el, renderCellResolver, ...others }: SpreadsheetOptions = {}) {
     super();
 
     this.options = resolveOptions(this, others);
+    this.renderCellResolver = renderCellResolver || ((() => ({ text: '' })) as RenderCellResolver);
 
     if (el) {
       this.createXSpreadsheetInstance(el);
@@ -153,6 +161,45 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     if (!this.xs) {
       this.createXSpreadsheetInstance(elementOrSelector);
     }
+  }
+
+  public render(): void {
+    const merges: string[] = [];
+
+    const cols: Record<string, any> = { len: this.table.getColumnCount() };
+    const rows: Record<string, any> = { len: this.table.getRowCount() };
+
+    this.table.getColumns().forEach((col, idx) => {
+      if (col.width !== undefined) {
+        cols[idx] = { width: col.width };
+      }
+    });
+
+    this.table
+      .transformRows((row, ri) => {
+        const { cells, ...others } = row;
+
+        return {
+          ...others,
+          cells: cells.reduce((prev, tableCell) => {
+            const { span, mergedCoord, ...cell } = tableCell as TableCell;
+            const resolved = this.renderCellResolver(cell, row, ri);
+
+            if (span) {
+              resolved.merge = [span[1], span[0]];
+            }
+
+            if (mergedCoord) {
+              merges.push(mergedCoord);
+            }
+
+            return { ...prev, [this.table.getCellCoordinate(cell.id)[0]]: resolved };
+          }, {}),
+        };
+      })
+      .forEach((row, idx) => (rows[idx] = row));
+
+    this.xs.loadData({ styles: [], merges, cols, rows });
   }
 
   public select(
