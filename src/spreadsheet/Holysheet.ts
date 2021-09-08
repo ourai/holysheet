@@ -273,15 +273,38 @@ class Holysheet extends EventEmitter implements Spreadsheet {
       (prev, sheet) => ({ ...prev, [sheet.getId()]: sheet }),
       {},
     );
+    const existsIdMap: Record<string, boolean> = {};
+    const resolved: ISheet[] = [];
 
-    this.sheets = sheets.map(sheet =>
-      sheet.id && sheetMap[sheet.id] ? sheetMap[sheet.id] : new Sheet(sheet),
-    );
+    sheets.forEach(sheet => {
+      if (sheet.id && sheetMap[sheet.id]) {
+        const { id, name, extra } = sheet;
+        const existsSheet = sheetMap[id];
+
+        existsIdMap[id] = true;
+
+        if (existsSheet.getName() !== name) {
+          existsSheet.setName(name);
+        }
+
+        existsSheet.setExtra(extra);
+      } else {
+        resolved.push(new Sheet(sheet));
+      }
+    });
+
+    this.sheets.forEach(sheet => {
+      if (!existsIdMap[sheet.getId()]) {
+        sheet.destroy();
+      }
+    });
+
+    this.sheets = resolved;
 
     this.setCurrentSheet();
     this.emit(
       'change',
-      this.sheets.map(sheet => ({ ...sheet.getExtra(), id: sheet.getId(), name: sheet.getName() })),
+      resolved.map(sheet => ({ ...sheet.getExtra(), id: sheet.getId(), name: sheet.getName() })),
     );
   }
 
@@ -292,6 +315,12 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
   public updateCell(id: CellId, data: Record<string, any>): void {
     this.table.setCellProperties(id, data);
+  }
+
+  public updateCellText(id: CellId, text: string): void {
+    const [colIndex, rowIndex] = this.table.getCellCoordinate(id) as [number, number];
+
+    (this.xs.cellText(rowIndex, colIndex, text) as any).reRender();
   }
 
   public destroy(): void {

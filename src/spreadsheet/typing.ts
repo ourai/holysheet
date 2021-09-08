@@ -75,6 +75,7 @@ interface Spreadsheet {
   setSheets(sheets: SheetData[]): void;
   changeSheet(index: number): void;
   updateCell(id: CellId, data: Record<string, any>): void;
+  updateCellText(id: CellId, text: string): void;
   destroy(): void;
 }
 

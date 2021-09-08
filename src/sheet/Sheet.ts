@@ -6,24 +6,21 @@ import { SheetId, SheetExtra, ISheet, SheetInitializer } from './typing';
 
 class Sheet implements ISheet {
   private readonly id: SheetId;
-  private readonly extra: SheetExtra;
 
   private name: string = '';
+  private extra: SheetExtra = {};
 
   private table: ITable = null as any;
 
   constructor({ name, ...others }: SheetInitializer) {
     this.id = generateRandomId('HolysheetSheet');
-    this.extra = others;
+
     this.name = name;
+    this.extra = others;
   }
 
   public getId(): SheetId {
     return this.id;
-  }
-
-  public getExtra(): SheetExtra {
-    return this.extra;
   }
 
   public getName(): string {
@@ -32,6 +29,14 @@ class Sheet implements ISheet {
 
   public setName(name: string): void {
     this.name = name;
+  }
+
+  public getExtra(): SheetExtra {
+    return this.extra;
+  }
+
+  public setExtra(extra: SheetExtra): void {
+    this.extra = extra;
   }
 
   public getTable(): ITable | null {

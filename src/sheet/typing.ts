@@ -17,9 +17,10 @@ interface SheetStyle {
 
 interface ISheet {
   getId(): SheetId;
-  getExtra(): SheetExtra;
   getName(): string;
   setName(name: string): void;
+  getExtra(): SheetExtra;
+  setExtra(extra: SheetExtra): void;
   getTable(): ITable | null;
   hasTable(): boolean;
   createTable(initializer: TableInitializer): ITable;
