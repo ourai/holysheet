@@ -49,6 +49,14 @@ class Sheet implements ISheet {
 
     return this.table;
   }
+
+  public destroy(): void {
+    if (this.table) {
+      this.table.destroy();
+
+      this.table = null as any;
+    }
+  }
 }
 
 export default Sheet;

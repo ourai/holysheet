@@ -75,6 +75,7 @@ interface ITable extends IEventEmitter<TableEvents> {
     propertyName: string,
     propertyValue: any,
   ): void;
+  destroy(): void;
 }
 
 type CellCreator = () => Omit<TableCell, 'id'>;

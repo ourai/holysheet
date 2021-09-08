@@ -293,6 +293,20 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   public updateCell(id: CellId, data: Record<string, any>): void {
     this.table.setCellProperties(id, data);
   }
+
+  public destroy(): void {
+    this.sheet = null as any;
+    this.table = null as any;
+
+    this.chosenCell = null;
+    this.chosenRange = null;
+
+    this.clearRowAndColStatus();
+
+    this.sheets.forEach(sheet => sheet.destroy());
+
+    this.xs.deleteSheet();
+  }
 }
 
 export default Holysheet;

@@ -283,6 +283,14 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
       ri++;
     }
   }
+
+  public destroy(): void {
+    this.columns = [];
+    this.rows = [];
+    this.cells = {};
+
+    this.off();
+  }
 }
 
 export default AbstractTable;

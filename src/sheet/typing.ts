@@ -23,7 +23,7 @@ interface ISheet {
   getTable(): ITable | null;
   hasTable(): boolean;
   createTable(initializer: TableInitializer): ITable;
-  // destroy(): void;
+  destroy(): void;
 }
 
 interface SheetInitializer {

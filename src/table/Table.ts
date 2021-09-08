@@ -665,6 +665,13 @@ class Table extends AbstractTable implements ITable {
       ? this.deleteRows(sri, eri - sri + 1)
       : { success: false, message: '没有选中整行' };
   }
+
+  public destroy(): void {
+    this.selection = null;
+    this.merged = {};
+
+    super.destroy();
+  }
 }
 
 export default Table;
