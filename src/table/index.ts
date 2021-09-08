@@ -1,5 +1,6 @@
 export {
   CellId,
+  CellStyle,
   TableCell,
   CellData,
   TableColumn,

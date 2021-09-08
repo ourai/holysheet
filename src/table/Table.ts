@@ -4,6 +4,7 @@ import AbstractTable, { getColumnTitle, getColumnIndex } from '../abstract-table
 
 import {
   CellId,
+  CellStyle,
   InternalCell,
   TableCell,
   InternalRow,
@@ -63,19 +64,40 @@ class Table extends AbstractTable implements ITable {
     return getTitleCoord(colIndex, rowIndex, endColIndex, endRowIndex);
   }
 
+  public getCellText(id: CellId): string {
+    return (this.cells[id] as InternalCell).text || '';
+  }
+
+  public setCellText(id: CellId, text: string): void {
+    (this.cells[id] as InternalCell).text = text;
+  }
+
+  public getCellStyle(id: CellId): CellStyle {
+    return (this.cells[id] as InternalCell).style || {};
+  }
+
+  public setCellStyle(id: CellId, style: CellStyle): void {
+    (this.cells[id] as InternalCell).style = style;
+  }
+
   public setCellProperties(id: CellId, properties: Record<string, any>): void {
-    super.setCellProperties(id, omit(properties, ['mergedCoord']));
+    const { text = '', style = {}, ...others } = omit(properties, ['mergedCoord']);
+
+    this.setCellText(id, text);
+    this.setCellStyle(id, style);
+
+    super.setCellProperties(id, others);
   }
 
   public fill(cells: CellData[]): void {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const {
-        coordinate,
-        span = [],
-        ...others
-      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
+      const { coordinate, span = [], ...others } = omit(cell, [
+        '__meta',
+        'id',
+        'mergedCoord',
+      ]) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 

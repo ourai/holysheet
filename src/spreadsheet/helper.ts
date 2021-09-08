@@ -1,5 +1,7 @@
 import { isString, noop } from '@ntks/toolbox';
-import XSpreadsheet from '@wotaware/x-spreadsheet';
+import XSpreadsheet, { CellStyle as XSpreadsheetCellStyle } from '@wotaware/x-spreadsheet';
+
+import { CellStyle } from '../sheet';
 
 import {
   MountEl,
@@ -66,6 +68,18 @@ function resolveOptions(
   };
 }
 
+function resolveCellStyle(style: CellStyle): XSpreadsheetCellStyle {
+  return {
+    align: style.align,
+    valign: style.verticalAlign,
+    font: style.font,
+    bgcolor: style.backgroundColor,
+    textwrap: style.wrap,
+    color: style.color,
+    border: style.border,
+  };
+}
+
 function createXSpreadsheetInstance(
   elementOrSelector: MountEl,
   options: ResolvedOptions,
@@ -99,4 +113,4 @@ function createXSpreadsheetInstance(
   } as any);
 }
 
-export { resolveOptions, createXSpreadsheetInstance };
+export { resolveOptions, resolveCellStyle, createXSpreadsheetInstance };

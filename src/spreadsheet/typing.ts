@@ -1,5 +1,3 @@
-import { CellStyle, CellData } from '@wotaware/x-spreadsheet';
-
 import {
   CellId,
   TableCell,
@@ -12,12 +10,6 @@ import {
 } from '../sheet';
 
 type MountEl = HTMLElement | string;
-
-interface RenderCell extends Omit<CellData, 'style'> {
-  style?: CellStyle;
-}
-
-type RenderCellResolver = (cell: TableCell, row: TableRow, rowIndex: number) => RenderCell;
 
 type SpreadsheetEvents = 'cell-change' | 'range-change' | 'width-change' | 'height-change';
 
@@ -50,7 +42,6 @@ interface SpreadsheetOptions extends SpreadsheetHooks {
   editable?: boolean;
   cellCreator?: CellCreator;
   rowCreator?: RowCreator;
-  renderCellResolver?: RenderCellResolver;
 }
 
 type ResolvedOptions = Required<
@@ -75,14 +66,11 @@ interface Spreadsheet {
   setSheets(sheets: SheetData[]): void;
   changeSheet(index: number): void;
   updateCell(id: CellId, data: Record<string, any>): void;
-  updateCellText(id: CellId, text: string): void;
   destroy(): void;
 }
 
 export {
   MountEl,
-  RenderCell,
-  RenderCellResolver,
   SpreadsheetEvents,
   ContextMenuItem,
   CellCreator,

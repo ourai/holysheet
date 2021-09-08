@@ -1,2 +1,3 @@
+export { getColumnTitle, getColumnIndex } from './abstract-table';
 export * from './sheet';
-export { RenderCell, Holysheet as default } from './spreadsheet';
+export { Holysheet as default } from './spreadsheet';

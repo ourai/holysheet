@@ -8,11 +8,30 @@ import {
   TableInitializer as _TableInitializer,
 } from '../abstract-table';
 
+interface CellStyle {
+  align?: 'left' | 'center' | 'right';
+  verticalAlign?: 'top' | 'middle' | 'bottom';
+  font?: {
+    bold?: boolean;
+  };
+  color?: string;
+  backgroundColor?: string;
+  border?: {
+    top?: string[];
+    right?: string[];
+    bottom?: string[];
+    left?: string[];
+  };
+  wrap?: boolean;
+}
+
 interface InternalCell extends _InternalCell {
+  text: string;
+  style?: CellStyle;
   mergedCoord?: string;
 }
 
-interface TableCell extends Omit<InternalCell, '__meta'> {}
+interface TableCell extends Omit<InternalCell, '__meta' | 'text' | 'style'> {}
 
 interface CellData extends Omit<InternalCell, '__meta' | 'id' | 'mergedCoord'> {
   coordinate: [number, number] | [string, string];
@@ -45,6 +64,10 @@ interface Result {
 }
 
 interface ITable extends _ITable {
+  getCellText(id: CellId): string;
+  setCellText(id: CellId, text: string): void;
+  getCellStyle(id: CellId): CellStyle;
+  setCellStyle(id: CellId, style: CellStyle): void;
   fill(cells: CellData[]): void;
   getSelection(): TableSelection | null;
   setSelection(selection: TableSelection): void;
@@ -68,6 +91,7 @@ interface TableInitializer extends _TableInitializer {}
 export {
   CellId,
   CellMeta,
+  CellStyle,
   InternalCell,
   TableCell,
   CellData,

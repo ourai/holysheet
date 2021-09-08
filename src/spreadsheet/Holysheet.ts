@@ -1,6 +1,6 @@
-import { noop } from '@ntks/toolbox';
+import { noop, clone } from '@ntks/toolbox';
 import EventEmitter from '@ntks/event-emitter';
-import XSpreadsheet from '@wotaware/x-spreadsheet';
+import XSpreadsheet, { CellData as XSpreadsheetCellData } from '@wotaware/x-spreadsheet';
 
 import {
   CellId,
@@ -15,19 +15,16 @@ import {
 
 import {
   MountEl,
-  RenderCellResolver,
   CellCreator,
   RowCreator,
   SpreadsheetOptions,
   ResolvedOptions,
   Spreadsheet,
 } from './typing';
-import { resolveOptions, createXSpreadsheetInstance } from './helper';
+import { resolveOptions, resolveCellStyle, createXSpreadsheetInstance } from './helper';
 
 class Holysheet extends EventEmitter implements Spreadsheet {
   private readonly options: ResolvedOptions;
-
-  private readonly renderCellResolver: RenderCellResolver;
 
   private readonly cellCreator: CellCreator | undefined;
   private readonly rowCreator: RowCreator | undefined;
@@ -75,7 +72,13 @@ class Holysheet extends EventEmitter implements Spreadsheet {
         rowCount: this.options.row.count!,
       });
 
-      table.on('cell-update', cell => this.emit('cell-update', cell));
+      table.on('cell-update', cell => {
+        const [colIndex, rowIndex] = this.table.getCellCoordinate(cell.id) as [number, number];
+
+        (this.xs.cellText(rowIndex, colIndex, cell.text) as any).reRender();
+
+        this.emit('cell-update', cell);
+      });
     }
 
     this.table = this.sheet.getTable()!;
@@ -169,7 +172,6 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     el,
     cellCreator,
     rowCreator,
-    renderCellResolver,
     beforeSheetActivate,
     sheetActivated,
     ...others
@@ -180,8 +182,6 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     this.cellCreator = cellCreator;
     this.rowCreator = rowCreator;
-
-    this.renderCellResolver = renderCellResolver || ((() => ({ text: '' })) as RenderCellResolver);
 
     this.beforeSheetActivate = beforeSheetActivate || (() => true);
     this.sheetActivated = sheetActivated || noop;
@@ -210,14 +210,18 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     });
 
     this.table
-      .transformRows((row, ri) => {
+      .transformRows(row => {
         const { cells, ...others } = row;
 
         return {
           ...others,
           cells: cells.reduce((prev, tableCell) => {
-            const { span, mergedCoord, ...cell } = tableCell as TableCell;
-            const resolved = this.renderCellResolver(cell, row, ri);
+            const { id, span, mergedCoord } = tableCell as TableCell;
+
+            const resolved: XSpreadsheetCellData = {
+              text: this.table.getCellText(id),
+              style: resolveCellStyle(this.table.getCellStyle(id)),
+            };
 
             if (span) {
               resolved.merge = [span[1], span[0]];
@@ -227,11 +231,11 @@ class Holysheet extends EventEmitter implements Spreadsheet {
               merges.push(mergedCoord);
             }
 
-            return { ...prev, [this.table.getCellCoordinate(cell.id)[0]]: resolved };
+            return { ...prev, [this.table.getCellCoordinate(id)[0]]: resolved };
           }, {}),
         };
       })
-      .forEach((row, idx) => (rows[idx] = row));
+      .forEach((row, idx) => (rows[idx] = clone(row)));
 
     this.xs.loadData({ styles: [], merges, cols, rows });
   }
@@ -264,7 +268,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.table.setSelection({ cell, range });
 
     if (cell) {
-      (this.xs as any).sheet.selector.set(colIndex, rowIndex);
+      (this.xs as any).sheet.selector.set(rowIndex, colIndex);
     }
   }
 
@@ -317,12 +321,6 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.table.setCellProperties(id, data);
   }
 
-  public updateCellText(id: CellId, text: string): void {
-    const [colIndex, rowIndex] = this.table.getCellCoordinate(id) as [number, number];
-
-    (this.xs.cellText(rowIndex, colIndex, text) as any).reRender();
-  }
-
   public destroy(): void {
     this.sheet = null as any;
     this.table = null as any;
@@ -334,6 +332,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     this.sheets.forEach(sheet => sheet.destroy());
 
+    this.off();
     this.xs.deleteSheet();
   }
 }
