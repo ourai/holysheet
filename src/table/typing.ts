@@ -8,6 +8,11 @@ import {
   TableInitializer as _TableInitializer,
 } from '../abstract-table';
 
+interface ColOverflowCell {
+  id: CellId;
+  index: number;
+}
+
 interface CellStyle {
   align?: 'left' | 'center' | 'right';
   verticalAlign?: 'top' | 'middle' | 'bottom';
@@ -91,6 +96,7 @@ interface TableInitializer extends _TableInitializer {}
 export {
   CellId,
   CellMeta,
+  ColOverflowCell,
   CellStyle,
   InternalCell,
   TableCell,

@@ -4,6 +4,7 @@ import AbstractTable, { getColumnTitle, getColumnIndex } from '../abstract-table
 
 import {
   CellId,
+  ColOverflowCell,
   CellStyle,
   InternalCell,
   TableCell,
@@ -45,6 +46,53 @@ class Table extends AbstractTable implements ITable {
 
     delete this.merged[mergedCoord!];
     this.merged[newMergedCoord] = range;
+  }
+
+  private getColumnOverflowCells(
+    row: InternalRow,
+    startColIndex: number,
+    endColIndex: number,
+  ): ColOverflowCell[] {
+    const hitCells: ColOverflowCell[] = [];
+
+    for (let idx = 0; idx < row.cells.length; idx++) {
+      const cellId = row.cells[idx];
+      const {
+        span = [],
+        __meta: { colIndex },
+      } = this.cells[cellId];
+      const calcColIndex = colIndex + (span[0] || 0);
+
+      if (calcColIndex >= startColIndex && colIndex <= endColIndex) {
+        hitCells.push({ id: cellId, index: idx });
+      }
+
+      if (calcColIndex >= endColIndex) {
+        break;
+      }
+    }
+
+    return hitCells;
+  }
+
+  private getRowOverflowCells(startRowIndex: number, endRowIndex: number): CellId[] {
+    const cells: CellId[] = [];
+
+    this.rows.slice(startRowIndex, endRowIndex + 1).forEach(row => {
+      row.cells.forEach(cellId => {
+        const {
+          span = [],
+          __meta: { rowIndex },
+        } = this.cells[cellId];
+        const rowSpan = span[1] || 0;
+
+        if (rowIndex + rowSpan > endRowIndex) {
+          cells.push(cellId);
+        }
+      });
+    });
+
+    return cells;
   }
 
   public static getColumnTitle(index: number): string {
@@ -93,11 +141,11 @@ class Table extends AbstractTable implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const { coordinate, span = [], ...others } = omit(cell, [
-        '__meta',
-        'id',
-        'mergedCoord',
-      ]) as CellData;
+      const {
+        coordinate,
+        span = [],
+        ...others
+      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 
@@ -384,24 +432,7 @@ class Table extends AbstractTable implements ITable {
       const endColIndex = startColIndex + resolvedCount - 1;
 
       this.rows.forEach((row, ri) => {
-        const hitCells: { id: CellId; index: number }[] = [];
-
-        for (let idx = 0; idx < row.cells.length; idx++) {
-          const cellId = row.cells[idx];
-          const {
-            span = [],
-            __meta: { colIndex },
-          } = this.cells[cellId];
-          const calcColIndex = colIndex + (span[0] || 0);
-
-          if (calcColIndex >= startColIndex && colIndex <= endColIndex) {
-            hitCells.push({ id: cellId, index: idx });
-          }
-
-          if (calcColIndex >= endColIndex) {
-            break;
-          }
-        }
+        const hitCells = this.getColumnOverflowCells(row, startColIndex, endColIndex);
 
         if (hitCells.length > 0) {
           for (let idx = hitCells.length - 1; idx >= 0; idx--) {
@@ -521,13 +552,47 @@ class Table extends AbstractTable implements ITable {
       return { success: false, message: '插入位置有误或未设置要插入的行数' };
     }
 
+    const overflowCells = this.getRowOverflowCells(rowIndex - 1, rowIndex - 1);
+
     this.rows.splice(rowIndex, 0, ...this.createRows(rowIndex, count, this.getColumnCount()));
+
+    // 在跨行单元格的范围内插入行时需要更新跨行信息
+    if (overflowCells.length > 0) {
+      overflowCells
+        .sort((a, b) => (this.cells[a].__meta.colIndex > this.cells[b].__meta.colIndex ? -1 : 1))
+        .forEach(cellId => {
+          const {
+            span = [],
+            mergedCoord,
+            __meta: { colIndex, rowIndex: cellRowIndex },
+          } = this.cells[cellId] as InternalCell;
+          const [colSpan = 0, rowSpan = 0] = span;
+
+          if (rowSpan === 0) {
+            return;
+          }
+
+          this.rows
+            .slice(rowIndex, Math.min(cellRowIndex + rowSpan, rowIndex + count - 1) + 1)
+            .forEach(row => this.removeCells(row.cells.splice(colIndex, colSpan + 1)));
+
+          const [sci, sri, eci] = this.merged[mergedCoord!];
+          const newRowSpan = rowSpan + count;
+          const range: TableRange = [sci, sri, eci, sci + newRowSpan];
+          const newMergedCoord = getTitleCoord(...range);
+
+          this.cells[cellId].span = [colSpan, newRowSpan];
+          (this.cells[cellId] as InternalCell).mergedCoord = newMergedCoord;
+
+          this.merged[newMergedCoord] = range;
+        });
+    }
 
     this.rows.slice(rowIndex + count).forEach(({ cells }) =>
       cells.forEach(cellId => {
-        const [colIndex, rowIndex] = this.getCellCoordinate(cellId) as [number, number];
+        const [colIndex, cellRowIndex] = this.getCellCoordinate(cellId) as [number, number];
 
-        this.updateCellCoordinate(cellId, colIndex, rowIndex + count);
+        this.updateCellCoordinate(cellId, colIndex, cellRowIndex + count);
       }),
     );
 
@@ -537,25 +602,10 @@ class Table extends AbstractTable implements ITable {
   public deleteRows(startRowIndex: number, count?: number): Result {
     const resolvedCount = count === undefined ? this.getRowCount() - startRowIndex : count;
     const endRowIndex = startRowIndex + resolvedCount - 1;
-
-    const overflowRowIndex = endRowIndex + 1;
-    const overflowCells: CellId[] = [];
-
-    this.rows.slice(startRowIndex, overflowRowIndex).forEach(row => {
-      row.cells.forEach(cellId => {
-        const {
-          span = [],
-          __meta: { rowIndex },
-        } = this.cells[cellId];
-        const rowSpan = span[1] || 0;
-
-        if (rowIndex + rowSpan > endRowIndex) {
-          overflowCells.push(cellId);
-        }
-      });
-    });
+    const overflowCells = this.getRowOverflowCells(startRowIndex, endRowIndex);
 
     if (overflowCells.length > 0) {
+      const overflowRowIndex = endRowIndex + 1;
       const overflowCellRow = this.rows[overflowRowIndex];
 
       const cells = this.createCells(overflowRowIndex, 0, this.getColumnCount(), true);
