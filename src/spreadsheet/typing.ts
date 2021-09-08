@@ -1,6 +1,15 @@
 import { CellStyle, CellData } from '@wotaware/x-spreadsheet';
 
-import { CellId, TableCell, TableRow, SheetData } from '../sheet';
+import {
+  CellId,
+  TableCell,
+  InternalRow,
+  TableRow,
+  ITable,
+  SheetData,
+  SheetStyle,
+  ISheet,
+} from '../sheet';
 
 type MountEl = HTMLElement | string;
 
@@ -24,20 +33,37 @@ interface RowOptions {
 
 interface ContextMenuItem {}
 
-interface SpreadsheetOptions {
+type CellCreator = () => Omit<TableCell, 'id'>;
+type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
+
+interface SpreadsheetHooks {
+  beforeSheetActivate?(prev: ISheet): boolean;
+  sheetActivated?(current: ISheet, prev: ISheet): void;
+}
+
+interface SpreadsheetOptions extends SpreadsheetHooks {
   el?: MountEl;
   column?: ColumnOptions;
   row?: RowOptions;
+  style?: SheetStyle;
   contextMenu?: ContextMenuItem[];
   editable?: boolean;
+  cellCreator?: CellCreator;
+  rowCreator?: RowCreator;
   renderCellResolver?: RenderCellResolver;
 }
 
-type ResolvedOptions = Required<Omit<SpreadsheetOptions, 'el' | 'renderCellResolver'>>;
+type ResolvedOptions = Required<
+  Omit<
+    SpreadsheetOptions,
+    'el' | 'cellCreator' | 'rowCreator' | 'renderCellResolver' | keyof SpreadsheetHooks
+  >
+>;
 
 interface Spreadsheet {
   mount(elementOrSelector: MountEl): void;
   render(): void;
+  getTable(): ITable;
   getSelectedRows(): TableRow[];
   select(colIndex: number, rowIndex: number): void;
   select(
@@ -57,6 +83,8 @@ export {
   RenderCellResolver,
   SpreadsheetEvents,
   ContextMenuItem,
+  CellCreator,
+  RowCreator,
   SpreadsheetOptions,
   ResolvedOptions,
   Spreadsheet,

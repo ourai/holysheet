@@ -3,10 +3,11 @@ export {
   TableCell,
   CellData,
   TableColumn,
+  InternalRow,
   TableRow,
   TableRange,
   TableSelection,
   ITable,
 } from '../table';
-export { SheetData, ISheet, SheetInitializer } from './typing';
+export { SheetData, SheetStyle, ISheet, SheetInitializer } from './typing';
 export { default as Sheet } from './Sheet';

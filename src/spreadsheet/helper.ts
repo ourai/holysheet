@@ -1,4 +1,4 @@
-import { isString } from '@ntks/toolbox';
+import { isString, noop } from '@ntks/toolbox';
 import XSpreadsheet from '@wotaware/x-spreadsheet';
 
 import {
@@ -18,50 +18,49 @@ function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
       key: 'insert-column-left',
       title: () => '前面添加列',
       available: mode => mode === 'col-title',
-      // handler: data => this.insertColumn(data.selector.range.sci),
+      handler: noop,
     },
     {
       key: 'insert-column-right',
       title: () => '后面添加列',
       available: mode => mode === 'col-title',
-      // handler: data => this.insertColumn(data.selector.range.sci + 1),
+      handler: noop,
     },
     {
       key: 'delete-selected-columns',
       title: () => '删除列',
       available: mode => mode === 'col-title' && inst.table.getColumnCount() > 1,
-      // handler: data => {
-      // },
+      handler: noop,
     },
     {
       key: 'insert-row-above',
       title: () => '上面添加行',
       available: mode => mode === 'row-title',
-      // handler: data => this.insertRow(data.selector.range.sri),
+      handler: noop,
     },
     {
       key: 'insert-row-below',
       title: () => '下面添加行',
       available: mode => mode === 'row-title',
-      // handler: data => this.insertRow(data.selector.range.sri + 1),
+      handler: noop,
     },
     {
       key: 'delete-selected-rows',
       title: () => '删除行',
       available: mode => mode === 'row-title' && inst.table.getRowCount() > 1,
-      // handler: data => {
-      // },
+      handler: noop,
     },
   ];
 }
 
 function resolveOptions(
   inst: Spreadsheet,
-  { column = {}, row = {}, contextMenu, editable }: SpreadsheetOptions,
+  { column = {}, row = {}, style = {}, contextMenu, editable }: SpreadsheetOptions,
 ): ResolvedOptions {
   return {
     column: { count: column.count || DEFAULT_COL_COUNT, width: column.width || 100 },
     row: { count: row.count || DEFAULT_ROW_COUNT, height: row.height || 30 },
+    style,
     contextMenu: contextMenu || getDefaultContextMenuItems(inst),
     editable: editable !== false,
   };
@@ -95,6 +94,7 @@ function createXSpreadsheetInstance(
       len: row.count,
       height: row.height,
     },
+    style: options.style,
     contextMenuItems: options.contextMenu,
   } as any);
 }

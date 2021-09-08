@@ -2,10 +2,11 @@ import { generateRandomId } from '@ntks/toolbox';
 
 import Table, { ITable, TableInitializer } from '../table';
 
-import { SheetId, ISheet, SheetInitializer } from './typing';
+import { SheetId, SheetExtra, ISheet, SheetInitializer } from './typing';
 
 class Sheet implements ISheet {
   private readonly id: SheetId;
+  private readonly extra: SheetExtra;
 
   private name: string = '';
 
@@ -13,11 +14,16 @@ class Sheet implements ISheet {
 
   constructor({ name, ...others }: SheetInitializer) {
     this.id = generateRandomId('HolysheetSheet');
+    this.extra = others;
     this.name = name;
   }
 
   public getId(): SheetId {
     return this.id;
+  }
+
+  public getExtra(): SheetExtra {
+    return this.extra;
   }
 
   public getName(): string {

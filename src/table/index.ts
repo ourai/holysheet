@@ -3,6 +3,7 @@ export {
   TableCell,
   CellData,
   TableColumn,
+  InternalRow,
   TableRow,
   TableRange,
   TableSelection,

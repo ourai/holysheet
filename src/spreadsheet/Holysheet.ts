@@ -1,3 +1,4 @@
+import { noop } from '@ntks/toolbox';
 import EventEmitter from '@ntks/event-emitter';
 import XSpreadsheet from '@wotaware/x-spreadsheet';
 
@@ -15,6 +16,8 @@ import {
 import {
   MountEl,
   RenderCellResolver,
+  CellCreator,
+  RowCreator,
   SpreadsheetOptions,
   ResolvedOptions,
   Spreadsheet,
@@ -23,7 +26,14 @@ import { resolveOptions, createXSpreadsheetInstance } from './helper';
 
 class Holysheet extends EventEmitter implements Spreadsheet {
   private readonly options: ResolvedOptions;
+
   private readonly renderCellResolver: RenderCellResolver;
+
+  private readonly cellCreator: CellCreator | undefined;
+  private readonly rowCreator: RowCreator | undefined;
+
+  private readonly beforeSheetActivate: (prev: ISheet) => boolean;
+  private readonly sheetActivated: (current: ISheet, prev: ISheet) => void;
 
   private xs: XSpreadsheet = null as any;
 
@@ -43,6 +53,11 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
   private setCurrentSheet(index: number = 0): void {
     const prevSheet = this.sheet;
+
+    if (!this.beforeSheetActivate(prevSheet)) {
+      return;
+    }
+
     const prevTable = this.table;
 
     if (prevTable) {
@@ -54,6 +69,8 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     if (!this.sheet.hasTable()) {
       const table = this.sheet.createTable({
+        cellCreator: this.cellCreator,
+        rowCreator: this.rowCreator,
         columnCount: this.options.column.count!,
         rowCount: this.options.row.count!,
       });
@@ -62,6 +79,8 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     }
 
     this.table = this.sheet.getTable()!;
+
+    this.sheetActivated(this.sheet, prevSheet);
   }
 
   private clearRowAndColStatus(): void {
@@ -146,11 +165,26 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.xs = xs;
   }
 
-  constructor({ el, renderCellResolver, ...others }: SpreadsheetOptions = {}) {
+  constructor({
+    el,
+    cellCreator,
+    rowCreator,
+    renderCellResolver,
+    beforeSheetActivate,
+    sheetActivated,
+    ...others
+  }: SpreadsheetOptions = {}) {
     super();
 
     this.options = resolveOptions(this, others);
+
+    this.cellCreator = cellCreator;
+    this.rowCreator = rowCreator;
+
     this.renderCellResolver = renderCellResolver || ((() => ({ text: '' })) as RenderCellResolver);
+
+    this.beforeSheetActivate = beforeSheetActivate || (() => true);
+    this.sheetActivated = sheetActivated || noop;
 
     if (el) {
       this.createXSpreadsheetInstance(el);
@@ -202,6 +236,14 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.xs.loadData({ styles: [], merges, cols, rows });
   }
 
+  public getTable(): ITable {
+    return this.table;
+  }
+
+  public getSelectedRows(): TableRow[] {
+    return this.chosenRows;
+  }
+
   public select(
     colIndex: number,
     rowIndex: number,
@@ -226,10 +268,6 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     }
   }
 
-  public getSelectedRows(): TableRow[] {
-    return this.chosenRows;
-  }
-
   public setSheets(sheets: SheetData[]): void {
     const sheetMap: Record<string, ISheet> = this.sheets.reduce(
       (prev, sheet) => ({ ...prev, [sheet.getId()]: sheet }),
@@ -243,7 +281,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.setCurrentSheet();
     this.emit(
       'change',
-      this.sheets.map(sheet => ({ id: sheet.getId(), name: sheet.getName() })),
+      this.sheets.map(sheet => ({ ...sheet.getExtra(), id: sheet.getId(), name: sheet.getName() })),
     );
   }
 
