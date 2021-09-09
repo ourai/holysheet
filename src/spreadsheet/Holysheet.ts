@@ -240,38 +240,6 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.xs.loadData({ styles: [], merges, cols, rows });
   }
 
-  public getTable(): ITable {
-    return this.table;
-  }
-
-  public getSelectedRows(): TableRow[] {
-    return this.chosenRows;
-  }
-
-  public select(
-    colIndex: number,
-    rowIndex: number,
-    endColIndex?: number,
-    endRowIndex?: number,
-  ): void {
-    let cell: TableCell | null;
-    let range: TableRange;
-
-    if (endColIndex !== undefined && endRowIndex !== undefined) {
-      cell = null;
-      range = [colIndex, rowIndex, endColIndex, endRowIndex];
-    } else {
-      cell = this.table.getCell(colIndex, rowIndex) || null;
-      range = [colIndex, rowIndex, colIndex, rowIndex];
-    }
-
-    this.table.setSelection({ cell, range });
-
-    if (cell) {
-      (this.xs as any).sheet.selector.set(rowIndex, colIndex);
-    }
-  }
-
   public setSheets(sheets: SheetData[]): void {
     const sheetMap: Record<string, ISheet> = this.sheets.reduce(
       (prev, sheet) => ({ ...prev, [sheet.getId()]: sheet }),
@@ -312,13 +280,41 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     );
   }
 
+  public getSheet(): ISheet {
+    return this.sheet;
+  }
+
   public changeSheet(index: number): void {
     this.setCurrentSheet(index);
     this.emit('sheet-change', index);
   }
 
-  public updateCell(id: CellId, data: Record<string, any>): void {
-    this.table.setCellProperties(id, data);
+  public getSelectedRows(): TableRow[] {
+    return this.chosenRows;
+  }
+
+  public select(
+    colIndex: number,
+    rowIndex: number,
+    endColIndex?: number,
+    endRowIndex?: number,
+  ): void {
+    let cell: TableCell | null;
+    let range: TableRange;
+
+    if (endColIndex !== undefined && endRowIndex !== undefined) {
+      cell = null;
+      range = [colIndex, rowIndex, endColIndex, endRowIndex];
+    } else {
+      cell = this.table.getCell(colIndex, rowIndex) || null;
+      range = [colIndex, rowIndex, colIndex, rowIndex];
+    }
+
+    this.table.setSelection({ cell, range });
+
+    if (cell) {
+      (this.xs as any).sheet.selector.set(rowIndex, colIndex);
+    }
   }
 
   public destroy(): void {

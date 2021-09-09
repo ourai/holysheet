@@ -54,7 +54,9 @@ type ResolvedOptions = Required<
 interface Spreadsheet {
   mount(elementOrSelector: MountEl): void;
   render(): void;
-  getTable(): ITable;
+  setSheets(sheets: SheetData[]): void;
+  getSheet(): ISheet;
+  changeSheet(index: number): void;
   getSelectedRows(): TableRow[];
   select(colIndex: number, rowIndex: number): void;
   select(
@@ -63,9 +65,6 @@ interface Spreadsheet {
     endColIndex: number,
     endRowIndex: number,
   ): void;
-  setSheets(sheets: SheetData[]): void;
-  changeSheet(index: number): void;
-  updateCell(id: CellId, data: Record<string, any>): void;
   destroy(): void;
 }
 
