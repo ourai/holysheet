@@ -1,6 +1,6 @@
 {
   "name": "holysheetjs",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Extensible JavaScript spreadsheet",
   "main": "dist/holysheet.umd.js",
   "module": "dist/holysheet.esm.js",
