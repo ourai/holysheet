@@ -1,7 +1,7 @@
-import { isString, noop } from '@ntks/toolbox';
+import { isString } from '@ntks/toolbox';
 import XSpreadsheet, { CellStyle as XSpreadsheetCellStyle } from '@wotaware/x-spreadsheet';
 
-import { CellStyle } from '../sheet';
+import { CellStyle, Result } from '../sheet';
 
 import {
   MountEl,
@@ -14,43 +14,49 @@ import {
 const DEFAULT_COL_COUNT = 26;
 const DEFAULT_ROW_COUNT = 100;
 
+function handleOperationResult(result: Result): void {
+  if (!result.success) {
+    alert(result.message);
+  }
+}
+
 function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
   return [
     {
       key: 'insert-column-left',
       title: () => '前面添加列',
       available: mode => mode === 'col-title',
-      handler: noop,
+      handler: data => handleOperationResult(inst.insertColumn(data.selector.range.sci)),
     },
     {
       key: 'insert-column-right',
       title: () => '后面添加列',
       available: mode => mode === 'col-title',
-      handler: noop,
+      handler: data => handleOperationResult(inst.insertColumn(data.selector.range.sci + 1)),
     },
     {
       key: 'delete-selected-columns',
       title: () => '删除列',
       available: mode => mode === 'col-title' && inst.table.getColumnCount() > 1,
-      handler: noop,
+      handler: () => handleOperationResult(inst.deleteColumns()),
     },
     {
       key: 'insert-row-above',
       title: () => '上面添加行',
       available: mode => mode === 'row-title',
-      handler: noop,
+      handler: data => handleOperationResult(inst.insertRow(data.selector.range.sri)),
     },
     {
       key: 'insert-row-below',
       title: () => '下面添加行',
       available: mode => mode === 'row-title',
-      handler: noop,
+      handler: data => handleOperationResult(inst.insertRow(data.selector.range.sri + 1)),
     },
     {
       key: 'delete-selected-rows',
       title: () => '删除行',
       available: mode => mode === 'row-title' && inst.table.getRowCount() > 1,
-      handler: noop,
+      handler: () => handleOperationResult(inst.deleteRows()),
     },
   ];
 }

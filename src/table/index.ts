@@ -8,6 +8,7 @@ export {
   TableRow,
   TableRange,
   TableSelection,
+  Result,
   ITable,
   TableInitializer,
 } from './typing';

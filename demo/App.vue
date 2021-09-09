@@ -1,5 +1,12 @@
 <template>
-  <div id="holysheet" class="HolysheetDemo"></div>
+  <div class="HolysheetDemo">
+    <div class="HolysheetDemo-toolbar">
+      <button :key="tool.key" @click.prevent="tool.handler" v-for="tool in tools">
+        {{ tool.text }}
+      </button>
+    </div>
+    <div class="HolysheetDemo-spreadsheet" id="holysheet" />
+  </div>
 </template>
 
 <script lang="ts">
@@ -9,10 +16,31 @@ import Holysheet from 'holysheetjs';
 
 @Component
 export default class HolysheetDemo extends Vue {
+  private tools: any[] = [];
+
   private hs: Holysheet = null as any;
+
+  private handleOperationResult(result: any): void {
+    if (!result.success) {
+      alert(result.message);
+    }
+  }
 
   private created(): void {
     this.hs = new Holysheet({ column: { count: 10 }, row: { count: 20 } });
+
+    this.tools = [
+      {
+        key: 'merge',
+        text: '合并单元格',
+        handler: () => this.handleOperationResult(this.hs.merge()),
+      },
+      {
+        key: 'unmerge',
+        text: '取消合并单元格',
+        handler: () => this.handleOperationResult(this.hs.unmerge()),
+      },
+    ];
   }
 
   private mounted(): void {
@@ -37,7 +65,26 @@ export default class HolysheetDemo extends Vue {
 <style>
 html,
 body,
-.HolysheetDemo {
+.HolysheetDemo,
+.HolysheetDemo-spreadsheet {
   height: 100%;
+  box-sizing: border-box;
+}
+
+.HolysheetDemo {
+  padding: 65px 20px 20px;
+}
+
+.HolysheetDemo-toolbar {
+  margin-top: -45px;
+  margin-bottom: 20px;
+}
+
+.HolysheetDemo-toolbar button {
+  cursor: pointer;
+}
+
+.HolysheetDemo-toolbar button + button {
+  margin-left: 10px;
 }
 </style>

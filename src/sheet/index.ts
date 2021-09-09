@@ -8,6 +8,7 @@ export {
   TableRow,
   TableRange,
   TableSelection,
+  Result,
   ITable,
 } from '../table';
 export { SheetData, SheetStyle, ISheet, SheetInitializer } from './typing';

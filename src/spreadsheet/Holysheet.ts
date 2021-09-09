@@ -3,10 +3,10 @@ import EventEmitter from '@ntks/event-emitter';
 import XSpreadsheet, { CellData as XSpreadsheetCellData } from '@wotaware/x-spreadsheet';
 
 import {
-  CellId,
   TableCell,
   TableRow,
   TableRange,
+  Result,
   ITable,
   SheetData,
   ISheet,
@@ -32,6 +32,9 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   private readonly beforeSheetActivate: (prev: ISheet) => boolean;
   private readonly sheetActivated: (current: ISheet, prev: ISheet) => void;
 
+  private readonly beforeSheetRender: () => boolean;
+  private readonly sheetRenderer: () => void;
+
   private xs: XSpreadsheet = null as any;
 
   private sheets: ISheet[] = [];
@@ -51,7 +54,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   private setCurrentSheet(index: number = 0): void {
     const prevSheet = this.sheet;
 
-    if (!this.beforeSheetActivate(prevSheet)) {
+    if (this.beforeSheetActivate(prevSheet) === false) {
       return;
     }
 
@@ -168,12 +171,22 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.xs = xs;
   }
 
+  private handleOperationResult(result: Result): Result {
+    if (result.success) {
+      this.render();
+    }
+
+    return result;
+  }
+
   constructor({
     el,
     cellCreator,
     rowCreator,
     beforeSheetActivate,
     sheetActivated,
+    beforeSheetRender,
+    sheetRendered,
     ...others
   }: SpreadsheetOptions = {}) {
     super();
@@ -185,6 +198,9 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     this.beforeSheetActivate = beforeSheetActivate || (() => true);
     this.sheetActivated = sheetActivated || noop;
+
+    this.beforeSheetRender = beforeSheetRender || (() => true);
+    this.sheetRenderer = sheetRendered || noop;
 
     if (el) {
       this.createXSpreadsheetInstance(el);
@@ -198,6 +214,10 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   }
 
   public render(): void {
+    if (this.beforeSheetRender() === false) {
+      return;
+    }
+
     const merges: string[] = [];
 
     const cols: Record<string, any> = { len: this.table.getColumnCount() };
@@ -238,6 +258,8 @@ class Holysheet extends EventEmitter implements Spreadsheet {
       .forEach((row, idx) => (rows[idx] = clone(row)));
 
     this.xs.loadData({ styles: [], merges, cols, rows });
+
+    this.sheetRenderer();
   }
 
   public setSheets(sheets: SheetData[]): void {
@@ -315,6 +337,30 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     if (cell) {
       (this.xs as any).sheet.selector.set(rowIndex, colIndex);
     }
+  }
+
+  public merge(): Result {
+    return this.handleOperationResult(this.table.mergeCells());
+  }
+
+  public unmerge(): Result {
+    return this.handleOperationResult(this.table.unmergeCells());
+  }
+
+  public insertColumn(startColIndex: number, count?: number): Result {
+    return this.handleOperationResult(this.table.insertColumn(startColIndex, count));
+  }
+
+  public deleteColumns(): Result {
+    return this.handleOperationResult(this.table.deleteColumnsInRange());
+  }
+
+  public insertRow(startRowIndex: number, count?: number): Result {
+    return this.handleOperationResult(this.table.insertRow(startRowIndex, count));
+  }
+
+  public deleteRows(): Result {
+    return this.handleOperationResult(this.table.deleteRowsInRange());
   }
 
   public destroy(): void {

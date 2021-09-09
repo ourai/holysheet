@@ -1,13 +1,4 @@
-import {
-  CellId,
-  TableCell,
-  InternalRow,
-  TableRow,
-  ITable,
-  SheetData,
-  SheetStyle,
-  ISheet,
-} from '../sheet';
+import { TableCell, InternalRow, TableRow, Result, SheetData, SheetStyle, ISheet } from '../sheet';
 
 type MountEl = HTMLElement | string;
 
@@ -31,6 +22,8 @@ type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
 interface SpreadsheetHooks {
   beforeSheetActivate?(prev: ISheet): boolean;
   sheetActivated?(current: ISheet, prev: ISheet): void;
+  beforeSheetRender?(): boolean;
+  sheetRendered?(): void;
 }
 
 interface SpreadsheetOptions extends SpreadsheetHooks {
@@ -65,6 +58,12 @@ interface Spreadsheet {
     endColIndex: number,
     endRowIndex: number,
   ): void;
+  merge(): Result;
+  unmerge(): Result;
+  insertColumn(startColIndex: number, count?: number): Result;
+  deleteColumns(): Result;
+  insertRow(startRowIndex: number, count?: number): Result;
+  deleteRows(): Result;
   destroy(): void;
 }
 
