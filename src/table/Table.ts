@@ -141,11 +141,11 @@ class Table extends AbstractTable implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const {
-        coordinate,
-        span = [],
-        ...others
-      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
+      const { coordinate, span = [], ...others } = omit(cell, [
+        '__meta',
+        'id',
+        'mergedCoord',
+      ]) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 
@@ -407,10 +407,54 @@ class Table extends AbstractTable implements ITable {
     this.columns.splice(colIndex, 0, ...this.createColumns(count));
 
     this.rows.forEach((row, ri) => {
-      row.cells.splice(colIndex, 0, ...(this.createCells(ri, colIndex, count) as CellId[]));
+      let cellIndex = -1;
+      let colOverflow = false;
+
+      for (let idx = 0; idx < row.cells.length; idx++) {
+        const cellId = row.cells[idx];
+        const {
+          span = [],
+          __meta: { colIndex: cellColIndex },
+        } = this.cells[cellId] as InternalCell;
+        const [colSpan = 0] = span;
+
+        if (cellColIndex === colIndex || cellColIndex + colSpan >= colIndex) {
+          colOverflow = colSpan > 0 && cellColIndex + colSpan >= colIndex;
+          cellIndex = idx;
+
+          break;
+        }
+      }
+
+      if (cellIndex === -1) {
+        return;
+      }
+
+      // 在跨列单元格的范围内插入列时需要更新跨列信息
+      if (colOverflow) {
+        const cellId = row.cells[cellIndex];
+        const { span = [], mergedCoord } = this.cells[cellId] as InternalCell;
+        const [colSpan = 0, rowSpan = 0] = span;
+
+        if (mergedCoord) {
+          const [sci, sri, eci, eri] = this.merged[mergedCoord];
+          const newColSpan = colSpan + count;
+          const range: TableRange = [sci, sri, sci + newColSpan, eri];
+          const newMergedCoord = getTitleCoord(...range);
+
+          this.cells[cellId].span = [newColSpan, rowSpan];
+          (this.cells[cellId] as InternalCell).mergedCoord = newMergedCoord;
+
+          delete this.merged[mergedCoord];
+
+          this.merged[newMergedCoord] = range;
+        }
+      } else {
+        row.cells.splice(cellIndex, 0, ...(this.createCells(ri, colIndex, count) as CellId[]));
+      }
 
       row.cells
-        .slice(colIndex + count)
+        .slice(colOverflow ? cellIndex + 1 : cellIndex + count)
         .forEach(cellId =>
           this.updateCellCoordinate(
             cellId,
