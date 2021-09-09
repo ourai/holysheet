@@ -27,7 +27,7 @@ export default class HolysheetDemo extends Vue {
   }
 
   private created(): void {
-    this.hs = new Holysheet({ column: { count: 10 }, row: { count: 20 } });
+    this.hs = new Holysheet({ column: { count: 4 }, row: { count: 4 } });
 
     this.tools = [
       {
@@ -57,7 +57,7 @@ export default class HolysheetDemo extends Vue {
 
     this.hs.setSheets([{ name: 'holysheet' }]);
 
-    this.hs.select(5, 5);
+    this.hs.select(1, 1);
   }
 }
 </script>

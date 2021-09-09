@@ -141,11 +141,11 @@ class Table extends AbstractTable implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const { coordinate, span = [], ...others } = omit(cell, [
-        '__meta',
-        'id',
-        'mergedCoord',
-      ]) as CellData;
+      const {
+        coordinate,
+        span = [],
+        ...others
+      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
 
@@ -408,6 +408,7 @@ class Table extends AbstractTable implements ITable {
 
     this.rows.forEach((row, ri) => {
       let cellIndex = -1;
+      let toInsert = false;
       let colOverflow = false;
 
       for (let idx = 0; idx < row.cells.length; idx++) {
@@ -419,6 +420,7 @@ class Table extends AbstractTable implements ITable {
         const [colSpan = 0] = span;
 
         if (cellColIndex === colIndex || cellColIndex + colSpan >= colIndex) {
+          toInsert = cellColIndex === colIndex;
           colOverflow = colSpan > 0 && cellColIndex + colSpan >= colIndex;
           cellIndex = idx;
 
@@ -431,7 +433,7 @@ class Table extends AbstractTable implements ITable {
       }
 
       // 在跨列单元格的范围内插入列时需要更新跨列信息
-      if (colOverflow) {
+      if (!toInsert && colOverflow) {
         const cellId = row.cells[cellIndex];
         const { span = [], mergedCoord } = this.cells[cellId] as InternalCell;
         const [colSpan = 0, rowSpan = 0] = span;
@@ -620,15 +622,19 @@ class Table extends AbstractTable implements ITable {
             .slice(rowIndex, Math.min(cellRowIndex + rowSpan, rowIndex + count - 1) + 1)
             .forEach(row => this.removeCells(row.cells.splice(colIndex, colSpan + 1)));
 
-          const [sci, sri, eci] = this.merged[mergedCoord!];
-          const newRowSpan = rowSpan + count;
-          const range: TableRange = [sci, sri, eci, sci + newRowSpan];
-          const newMergedCoord = getTitleCoord(...range);
+          if (mergedCoord) {
+            const [sci, sri, eci] = this.merged[mergedCoord!];
+            const newRowSpan = rowSpan + count;
+            const range: TableRange = [sci, sri, eci, sci + newRowSpan];
+            const newMergedCoord = getTitleCoord(...range);
 
-          this.cells[cellId].span = [colSpan, newRowSpan];
-          (this.cells[cellId] as InternalCell).mergedCoord = newMergedCoord;
+            this.cells[cellId].span = [colSpan, newRowSpan];
+            (this.cells[cellId] as InternalCell).mergedCoord = newMergedCoord;
 
-          this.merged[newMergedCoord] = range;
+            delete this.merged[mergedCoord];
+
+            this.merged[newMergedCoord] = range;
+          }
         });
     }
 
