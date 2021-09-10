@@ -51,9 +51,9 @@ type RowMapFn<T> = (row: TableRow, index: number) => T;
 type TableEvents = 'cell-update' | 'cell-change' | 'row-update' | 'row-change';
 
 interface ITable extends IEventEmitter<TableEvents> {
-  getCell(id: CellId): TableCell;
-  getCell(colIndex: number, rowIndex: number): TableCell;
-  getCell(colTitle: string, rowTitle: string): TableCell;
+  getCell(id: CellId): TableCell | undefined;
+  getCell(colIndex: number, rowIndex: number): TableCell | undefined;
+  getCell(colTitle: string, rowTitle: string): TableCell | undefined;
   getCellCoordinate(id: CellId, title?: boolean): CellCoordinate;
   setCellProperties(id: CellId, properties: Record<string, any>): void;
   isCellModified(id: CellId): boolean;

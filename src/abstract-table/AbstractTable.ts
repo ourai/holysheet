@@ -93,8 +93,8 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
   private getTableCell(
     idOrColIndex: CellId | number,
     rowIndexOrTitle?: number | string,
-  ): TableCell {
-    let cellId: CellId;
+  ): TableCell | undefined {
+    let cellId: CellId | undefined;
 
     if (isString(idOrColIndex)) {
       if (isString(rowIndexOrTitle)) {
@@ -102,17 +102,17 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
 
         cellId = this.rows[Number(rowIndexOrTitle as string) - 1].cells.find(
           id => this.cells[id].__meta.colIndex === colIndex,
-        )!;
+        );
       } else {
         cellId = idOrColIndex as CellId;
       }
     } else {
       cellId = this.rows[rowIndexOrTitle as number].cells.find(
         id => this.cells[id].__meta.colIndex === (idOrColIndex as number),
-      )!;
+      );
     }
 
-    return omit(this.cells[cellId], ['__meta']);
+    return cellId && this.cells[cellId] ? omit(this.cells[cellId], ['__meta']) : undefined;
   }
 
   protected setCellCoordinate(id: CellId, colIndex: number, rowIndex: number): void {
@@ -152,7 +152,7 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
   protected getTableRows(internalRows: InternalRow[] = this.rows): TableRow[] {
     return internalRows.map(({ cells, ...others }) => ({
       ...others,
-      cells: cells.map(id => this.getTableCell(id)),
+      cells: cells.map(id => this.getTableCell(id)!),
     }));
   }
 
@@ -166,7 +166,10 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     this.rows = this.createRows(0, rowCount, columnCount);
   }
 
-  public getCell(idOrColIndex: CellId | number, rowIndexOrTitle?: number | string): TableCell {
+  public getCell(
+    idOrColIndex: CellId | number,
+    rowIndexOrTitle?: number | string,
+  ): TableCell | undefined {
     return this.getTableCell(idOrColIndex, rowIndexOrTitle);
   }
 

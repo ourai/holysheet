@@ -12,4 +12,5 @@ export {
   ITable,
   TableInitializer,
 } from './typing';
+export { getTitleCoord, getIndexCoord } from './helper';
 export { default } from './Table';
