@@ -83,10 +83,10 @@ interface ITable extends _ITable {
   getMergedInRange(): string[];
   mergeCells(): Result;
   unmergeCells(): Result;
-  insertColumn(colIndex: number, count?: number): Result;
+  insertColumns(colIndex: number, count?: number): Result;
   deleteColumns(startColIndex: number, count?: number): Result;
   deleteColumnsInRange(): Result;
-  insertRow(rowIndex: number, count?: number): Result;
+  insertRows(rowIndex: number, count?: number): Result;
   deleteRows(startRowIndex: number, count?: number): Result;
   deleteRowsInRange(): Result;
 }

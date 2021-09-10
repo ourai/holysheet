@@ -347,16 +347,16 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     return this.handleOperationResult(this.table.unmergeCells());
   }
 
-  public insertColumn(startColIndex: number, count?: number): Result {
-    return this.handleOperationResult(this.table.insertColumn(startColIndex, count));
+  public insertColumns(startColIndex: number, count?: number): Result {
+    return this.handleOperationResult(this.table.insertColumns(startColIndex, count));
   }
 
   public deleteColumns(): Result {
     return this.handleOperationResult(this.table.deleteColumnsInRange());
   }
 
-  public insertRow(startRowIndex: number, count?: number): Result {
-    return this.handleOperationResult(this.table.insertRow(startRowIndex, count));
+  public insertRows(startRowIndex: number, count?: number): Result {
+    return this.handleOperationResult(this.table.insertRows(startRowIndex, count));
   }
 
   public deleteRows(): Result {

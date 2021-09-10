@@ -399,7 +399,7 @@ class Table extends AbstractTable implements ITable {
     return { success: true };
   }
 
-  public insertColumn(colIndex: number, count: number = 1): Result {
+  public insertColumns(colIndex: number, count: number = 1): Result {
     if (colIndex < 0 || count < 1) {
       return { success: false, message: '插入位置有误或未设置要插入的列数' };
     }
@@ -593,12 +593,12 @@ class Table extends AbstractTable implements ITable {
       : { success: false, message: '没有选中整列' };
   }
 
-  public insertRow(rowIndex: number, count: number = 1): Result {
+  public insertRows(rowIndex: number, count: number = 1): Result {
     if (rowIndex < 0 || count < 1) {
       return { success: false, message: '插入位置有误或未设置要插入的行数' };
     }
 
-    const overflowCells = this.getRowOverflowCells(rowIndex - 1, rowIndex - 1);
+    const overflowCells = this.getRowOverflowCells(0, rowIndex - 1);
 
     this.rows.splice(rowIndex, 0, ...this.createRows(rowIndex, count, this.getColumnCount()));
 

@@ -26,13 +26,13 @@ function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
       key: 'insert-column-left',
       title: () => '前面添加列',
       available: mode => mode === 'col-title',
-      handler: data => handleOperationResult(inst.insertColumn(data.selector.range.sci)),
+      handler: data => handleOperationResult(inst.insertColumns(data.selector.range.sci)),
     },
     {
       key: 'insert-column-right',
       title: () => '后面添加列',
       available: mode => mode === 'col-title',
-      handler: data => handleOperationResult(inst.insertColumn(data.selector.range.sci + 1)),
+      handler: data => handleOperationResult(inst.insertColumns(data.selector.range.sci + 1)),
     },
     {
       key: 'delete-selected-columns',
@@ -44,13 +44,13 @@ function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
       key: 'insert-row-above',
       title: () => '上面添加行',
       available: mode => mode === 'row-title',
-      handler: data => handleOperationResult(inst.insertRow(data.selector.range.sri)),
+      handler: data => handleOperationResult(inst.insertRows(data.selector.range.sri)),
     },
     {
       key: 'insert-row-below',
       title: () => '下面添加行',
       available: mode => mode === 'row-title',
-      handler: data => handleOperationResult(inst.insertRow(data.selector.range.sri + 1)),
+      handler: data => handleOperationResult(inst.insertRows(data.selector.range.sri + 1)),
     },
     {
       key: 'delete-selected-rows',

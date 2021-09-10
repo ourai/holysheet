@@ -60,9 +60,9 @@ interface Spreadsheet {
   ): void;
   merge(): Result;
   unmerge(): Result;
-  insertColumn(startColIndex: number, count?: number): Result;
+  insertColumns(startColIndex: number, count?: number): Result;
   deleteColumns(): Result;
-  insertRow(startRowIndex: number, count?: number): Result;
+  insertRows(startRowIndex: number, count?: number): Result;
   deleteRows(): Result;
   destroy(): void;
 }
