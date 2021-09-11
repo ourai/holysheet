@@ -1,5 +1,3 @@
-import { IEventEmitter } from '@ntks/event-emitter';
-
 type ColSpan = number;
 type RowSpan = number;
 
@@ -48,9 +46,7 @@ type CellCoordinate = [StartColIndex, StartRowIndex] | [string, string];
 type RowFilter = (row: TableRow, index: number) => boolean;
 type RowMapFn<T> = (row: TableRow, index: number) => T;
 
-type TableEvents = 'cell-update' | 'cell-change' | 'row-update' | 'row-change';
-
-interface ITable extends IEventEmitter<TableEvents> {
+interface ITable {
   getCell(id: CellId): TableCell | undefined;
   getCell(colIndex: number, rowIndex: number): TableCell | undefined;
   getCell(colTitle: string, rowTitle: string): TableCell | undefined;
@@ -78,10 +74,15 @@ interface ITable extends IEventEmitter<TableEvents> {
   destroy(): void;
 }
 
+interface TableHooks {
+  cellUpdated?: (cell: TableCell) => void;
+  rowUpdated?: (row: TableRow) => void;
+}
+
 type CellCreator = () => Omit<TableCell, 'id'>;
 type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
 
-interface TableInitializer {
+interface TableInitializer extends TableHooks {
   columnCount: number;
   rowCount: number;
   cellCreator?: CellCreator;
@@ -100,7 +101,6 @@ export {
   CellCoordinate,
   RowFilter,
   RowMapFn,
-  TableEvents,
   ITable,
   CellCreator,
   RowCreator,

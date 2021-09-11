@@ -1,5 +1,4 @@
-import { isNumber, isString, generateRandomId, includes, omit, clone } from '@ntks/toolbox';
-import EventEmitter from '@ntks/event-emitter';
+import { noop, isNumber, isString, generateRandomId, includes, omit, clone } from '@ntks/toolbox';
 
 import {
   CellId,
@@ -12,7 +11,6 @@ import {
   CellCoordinate,
   RowFilter,
   RowMapFn,
-  TableEvents,
   ITable,
   CellCreator,
   RowCreator,
@@ -20,7 +18,10 @@ import {
 } from './typing';
 import { generateCell, generateRow, getColumnTitle, getColumnIndex } from './helper';
 
-class AbstractTable extends EventEmitter<TableEvents> implements ITable {
+class AbstractTable implements ITable {
+  private readonly cellUpdated: (cell: TableCell) => void;
+  private readonly rowUpdated: (row: TableRow) => void;
+
   private readonly cellCreator: CellCreator;
   private readonly rowCreator: RowCreator;
 
@@ -156,8 +157,16 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     }));
   }
 
-  constructor({ cellCreator, rowCreator, columnCount, rowCount }: TableInitializer) {
-    super();
+  constructor({
+    cellUpdated,
+    rowUpdated,
+    cellCreator,
+    rowCreator,
+    columnCount,
+    rowCount,
+  }: TableInitializer) {
+    this.cellUpdated = cellUpdated || noop;
+    this.rowUpdated = rowUpdated || noop;
 
     this.cellCreator = cellCreator || generateCell;
     this.rowCreator = rowCreator || generateRow;
@@ -193,7 +202,7 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
 
     this.markCellAsModified(id);
 
-    this.emit('cell-update', this.getCell(id));
+    this.cellUpdated(this.getCell(id)!);
   }
 
   public isCellModified(id: CellId): boolean {
@@ -269,7 +278,7 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
 
     row[propertyName] = propertyValue;
 
-    this.emit('row-update', this.getRow(rowIndex));
+    this.rowUpdated(this.getRow(rowIndex));
   }
 
   public setRowsPropertyValue(
@@ -291,8 +300,6 @@ class AbstractTable extends EventEmitter<TableEvents> implements ITable {
     this.columns = [];
     this.rows = [];
     this.cells = {};
-
-    this.off();
   }
 }
 

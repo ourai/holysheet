@@ -51,6 +51,18 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   private rowChosen: boolean = false;
   private colChosen: boolean = false;
 
+  private handleCellUpdated(cell: TableCell): void {
+    const [colIndex, rowIndex] = this.table.getCellCoordinate(cell.id) as [number, number];
+
+    (this.xs.cellText(rowIndex, colIndex, this.table.getCellText(cell.id)) as any).reRender();
+
+    this.emit('cell-update', cell);
+  }
+
+  private handleRowUpdated(row: TableRow): void {
+    this.emit('row-update', row);
+  }
+
   private setCurrentSheet(index: number = 0): void {
     const prevSheet = this.sheet;
 
@@ -62,25 +74,18 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     if (prevTable) {
       prevTable.clearSelection();
-      prevTable.off();
     }
 
     this.sheet = this.sheets[index];
 
     if (!this.sheet.hasTable()) {
-      const table = this.sheet.createTable({
+      this.sheet.createTable({
         cellCreator: this.cellCreator,
         rowCreator: this.rowCreator,
         columnCount: this.options.column.count!,
         rowCount: this.options.row.count!,
-      });
-
-      table.on('cell-update', cell => {
-        const [colIndex, rowIndex] = this.table.getCellCoordinate(cell.id) as [number, number];
-
-        (this.xs.cellText(rowIndex, colIndex, cell.text) as any).reRender();
-
-        this.emit('cell-update', cell);
+        cellUpdated: this.handleCellUpdated.bind(this),
+        rowUpdated: this.handleRowUpdated.bind(this),
       });
     }
 
