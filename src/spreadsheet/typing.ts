@@ -1,4 +1,13 @@
-import { TableCell, InternalRow, TableRow, Result, SheetData, SheetStyle, ISheet } from '../sheet';
+import {
+  TableCell,
+  CellData,
+  InternalRow,
+  TableRow,
+  Result,
+  SheetData,
+  SheetStyle,
+  ISheet,
+} from '../sheet';
 
 type MountEl = HTMLElement | string;
 
@@ -19,11 +28,13 @@ interface ContextMenuItem {}
 type CellCreator = () => Omit<TableCell, 'id'>;
 type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
 
+type CellResolver = (cell: TableCell) => Partial<CellData>;
+
 interface SpreadsheetHooks {
-  beforeSheetActivate?(prev: ISheet): boolean;
-  sheetActivated?(current: ISheet, prev: ISheet): void;
-  beforeSheetRender?(): boolean;
-  sheetRendered?(): void;
+  beforeSheetActivate?: (prev: ISheet) => boolean;
+  sheetActivated?: (current: ISheet, prev: ISheet) => void;
+  beforeSheetRender?: () => boolean;
+  sheetRendered?: () => void;
 }
 
 interface SpreadsheetOptions extends SpreadsheetHooks {
@@ -35,12 +46,13 @@ interface SpreadsheetOptions extends SpreadsheetHooks {
   editable?: boolean;
   cellCreator?: CellCreator;
   rowCreator?: RowCreator;
+  cellResolver?: CellResolver;
 }
 
 type ResolvedOptions = Required<
   Omit<
     SpreadsheetOptions,
-    'el' | 'cellCreator' | 'rowCreator' | 'renderCellResolver' | keyof SpreadsheetHooks
+    'el' | 'cellCreator' | 'rowCreator' | 'cellResolver' | keyof SpreadsheetHooks
   >
 >;
 
@@ -73,6 +85,7 @@ export {
   ContextMenuItem,
   CellCreator,
   RowCreator,
+  CellResolver,
   SpreadsheetOptions,
   ResolvedOptions,
   Spreadsheet,

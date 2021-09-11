@@ -17,6 +17,7 @@ import {
   MountEl,
   CellCreator,
   RowCreator,
+  CellResolver,
   SpreadsheetOptions,
   ResolvedOptions,
   Spreadsheet,
@@ -28,6 +29,8 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
   private readonly cellCreator: CellCreator | undefined;
   private readonly rowCreator: RowCreator | undefined;
+
+  private readonly cellResolver: CellResolver | undefined;
 
   private readonly beforeSheetActivate: (prev: ISheet) => boolean;
   private readonly sheetActivated: (current: ISheet, prev: ISheet) => void;
@@ -84,6 +87,11 @@ class Holysheet extends EventEmitter implements Spreadsheet {
         rowCreator: this.rowCreator,
         columnCount: this.options.column.count!,
         rowCount: this.options.row.count!,
+        cellInserted: cells => {
+          if (this.cellResolver) {
+            cells.forEach(cell => this.table.setCellProperties(cell.id, this.cellResolver!(cell)));
+          }
+        },
         cellUpdated: this.handleCellUpdated.bind(this),
         rowUpdated: this.handleRowUpdated.bind(this),
       });
@@ -188,6 +196,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     el,
     cellCreator,
     rowCreator,
+    cellResolver,
     beforeSheetActivate,
     sheetActivated,
     beforeSheetRender,
@@ -200,6 +209,8 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     this.cellCreator = cellCreator;
     this.rowCreator = rowCreator;
+
+    this.cellResolver = cellResolver;
 
     this.beforeSheetActivate = beforeSheetActivate || (() => true);
     this.sheetActivated = sheetActivated || noop;

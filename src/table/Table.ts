@@ -1,4 +1,4 @@
-import { isString, omit } from '@ntks/toolbox';
+import { isString, noop, omit } from '@ntks/toolbox';
 
 import AbstractTable, { getColumnTitle, getColumnIndex } from '../abstract-table';
 
@@ -15,10 +15,13 @@ import {
   TableSelection,
   Result,
   ITable,
+  TableInitializer,
 } from './typing';
 import { getTitleCoord, getIndexCoord } from './helper';
 
 class Table extends AbstractTable implements ITable {
+  private readonly cellInserted: (cells: TableCell[]) => void;
+
   private selection: TableSelection | null = null;
 
   private merged: Record<string, TableRange> = {};
@@ -95,6 +98,12 @@ class Table extends AbstractTable implements ITable {
     return cells;
   }
 
+  constructor({ cellInserted, ...others }: TableInitializer) {
+    super(others);
+
+    this.cellInserted = cellInserted || noop;
+  }
+
   public static getColumnTitle(index: number): string {
     return getColumnTitle(index);
   }
@@ -147,7 +156,7 @@ class Table extends AbstractTable implements ITable {
         'mergedCoord',
       ]) as CellData;
 
-      const [colIndexOrTitle, rowIndexOrTitle] = coordinate;
+      const [colIndexOrTitle, rowIndexOrTitle] = coordinate!;
 
       let colIndex: number;
       let rowIndex: number;
@@ -406,6 +415,8 @@ class Table extends AbstractTable implements ITable {
 
     this.columns.splice(colIndex, 0, ...this.createColumns(count));
 
+    const inserted: TableCell[] = [];
+
     this.rows.forEach((row, ri) => {
       let cellIndex = -1;
       let toInsert = false;
@@ -452,7 +463,11 @@ class Table extends AbstractTable implements ITable {
           this.merged[newMergedCoord] = range;
         }
       } else {
-        row.cells.splice(cellIndex, 0, ...(this.createCells(ri, colIndex, count) as CellId[]));
+        const cellIds = this.createCells(ri, colIndex, count) as CellId[];
+
+        inserted.push(...cellIds.map(id => this.getCell(id)!));
+
+        row.cells.splice(cellIndex, 0, ...cellIds);
       }
 
       row.cells
@@ -465,6 +480,8 @@ class Table extends AbstractTable implements ITable {
           ),
         );
     });
+
+    this.cellInserted(inserted);
 
     return { success: true };
   }
@@ -645,6 +662,14 @@ class Table extends AbstractTable implements ITable {
         this.updateCellCoordinate(cellId, colIndex, cellRowIndex + count);
       }),
     );
+
+    const inserted: TableCell[] = [];
+
+    this.rows
+      .slice(rowIndex, rowIndex + count)
+      .forEach(({ cells }) => inserted.push(...cells.map(id => this.getCell(id)!)));
+
+    this.cellInserted(inserted);
 
     return { success: true };
   }

@@ -39,7 +39,7 @@ interface InternalCell extends _InternalCell {
 interface TableCell extends Omit<InternalCell, '__meta' | 'text' | 'style'> {}
 
 interface CellData extends Omit<InternalCell, '__meta' | 'id' | 'mergedCoord'> {
-  coordinate: [number, number] | [string, string];
+  coordinate?: [number, number] | [string, string];
   [key: string]: any;
 }
 
@@ -91,7 +91,11 @@ interface ITable extends _ITable {
   deleteRowsInRange(): Result;
 }
 
-interface TableInitializer extends _TableInitializer {}
+interface TableHooks {
+  cellInserted?: (cells: TableCell[]) => void;
+}
+
+interface TableInitializer extends _TableInitializer, TableHooks {}
 
 export {
   CellId,
