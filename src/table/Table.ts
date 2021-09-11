@@ -147,6 +147,7 @@ class Table extends AbstractTable implements ITable {
   }
 
   public fill(cells: CellData[]): void {
+    const needRemove = Object.keys(this.cells).length > cells.length;
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
@@ -170,38 +171,23 @@ class Table extends AbstractTable implements ITable {
       }
 
       const { id } = this.getCell(colIndex, rowIndex)!;
-      const [colSpan = 0, rowSpan = 0] = span;
 
-      if (colSpan > 0 || rowSpan > 0) {
-        const range: TableRange = [colIndex, rowIndex, colIndex + colSpan, rowIndex + rowSpan];
-        const mergedCoord = getTitleCoord(...range);
+      if (needRemove) {
+        const [colSpan = 0, rowSpan = 0] = span;
 
-        this.cells[id].span = [colSpan, rowSpan];
-        (this.cells[id] as InternalCell).mergedCoord = mergedCoord;
+        if (colSpan > 0 || rowSpan > 0) {
+          const range: TableRange = [colIndex, rowIndex, colIndex + colSpan, rowIndex + rowSpan];
+          const mergedCoord = getTitleCoord(...range);
 
-        this.merged[mergedCoord] = range;
+          this.cells[id].span = [colSpan, rowSpan];
+          (this.cells[id] as InternalCell).mergedCoord = mergedCoord;
 
-        if (colSpan > 0) {
-          const indexArr: number[] = [];
+          this.merged[mergedCoord] = range;
 
-          let nextColIndex = colIndex + 1;
-
-          while (nextColIndex <= colIndex + colSpan) {
-            indexArr.push(nextColIndex);
-
-            nextColIndex++;
-          }
-
-          needRemoveCells.push({ index: rowIndex, cellIndexes: indexArr });
-        }
-
-        if (rowSpan > 0) {
-          let nextRowIndex = rowIndex + 1;
-
-          while (nextRowIndex <= rowIndex + rowSpan) {
+          if (colSpan > 0) {
             const indexArr: number[] = [];
 
-            let nextColIndex = colIndex;
+            let nextColIndex = colIndex + 1;
 
             while (nextColIndex <= colIndex + colSpan) {
               indexArr.push(nextColIndex);
@@ -209,15 +195,37 @@ class Table extends AbstractTable implements ITable {
               nextColIndex++;
             }
 
-            needRemoveCells.push({ index: nextRowIndex, cellIndexes: indexArr });
+            needRemoveCells.push({ index: rowIndex, cellIndexes: indexArr });
+          }
 
-            nextRowIndex++;
+          if (rowSpan > 0) {
+            let nextRowIndex = rowIndex + 1;
+
+            while (nextRowIndex <= rowIndex + rowSpan) {
+              const indexArr: number[] = [];
+
+              let nextColIndex = colIndex;
+
+              while (nextColIndex <= colIndex + colSpan) {
+                indexArr.push(nextColIndex);
+
+                nextColIndex++;
+              }
+
+              needRemoveCells.push({ index: nextRowIndex, cellIndexes: indexArr });
+
+              nextRowIndex++;
+            }
           }
         }
       }
 
       this.setCellProperties(id, others);
     });
+
+    if (needRemoveCells.length === 0) {
+      return;
+    }
 
     needRemoveCells
       .sort((a, b) => (a.index < b.index ? -1 : 1))
