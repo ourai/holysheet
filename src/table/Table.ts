@@ -337,6 +337,8 @@ class Table extends AbstractTable implements ITable {
       true,
     );
 
+    const inserted: TableCell[] = [];
+
     rowsInRange.forEach((row, ri) => {
       let targetCellIndex = rows[ri].cells.findIndex(cell => !cell);
 
@@ -359,13 +361,15 @@ class Table extends AbstractTable implements ITable {
           const [colSpan = 0, rowSpan = 0] = span;
 
           if (colSpan > 0) {
-            this.removeCells(
-              rows[ri].cells.splice(
-                targetCellIndex + 1,
-                colSpan,
-                ...(this.createCells(startRowIndex + ri, targetCellIndex + 1, colSpan) as CellId[]),
-              ),
-            );
+            const cellIds = this.createCells(
+              startRowIndex + ri,
+              targetCellIndex + 1,
+              colSpan,
+            ) as CellId[];
+
+            inserted.push(...cellIds.map(id => this.getCell(id)!));
+
+            this.removeCells(rows[ri].cells.splice(targetCellIndex + 1, colSpan, ...cellIds));
           }
 
           if (rowSpan > 0) {
@@ -375,17 +379,16 @@ class Table extends AbstractTable implements ITable {
 
             while (nextRowIndex <= endRowIndex) {
               const cellCount = colSpan + 1;
+              const cellIds = this.createCells(
+                startRowIndex + nextRowIndex,
+                targetCellIndex,
+                cellCount,
+              ) as CellId[];
+
+              inserted.push(...cellIds.map(id => this.getCell(id)!));
 
               this.removeCells(
-                rows[nextRowIndex].cells.splice(
-                  targetCellIndex,
-                  cellCount,
-                  ...(this.createCells(
-                    startRowIndex + nextRowIndex,
-                    targetCellIndex,
-                    cellCount,
-                  ) as CellId[]),
-                ),
+                rows[nextRowIndex].cells.splice(targetCellIndex, cellCount, ...cellIds),
               );
 
               nextRowIndex++;
@@ -412,6 +415,7 @@ class Table extends AbstractTable implements ITable {
     this.rows.splice(this.selection.range[1], rows.length, ...rows);
 
     this.clearSelection();
+    this.cellInserted(inserted);
 
     return { success: true };
   }
