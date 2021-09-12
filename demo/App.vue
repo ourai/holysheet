@@ -27,7 +27,7 @@ export default class HolysheetDemo extends Vue {
   }
 
   private created(): void {
-    this.hs = new Holysheet({ column: { count: 4 }, row: { count: 4 } });
+    this.hs = new Holysheet({ column: { count: 4 }, row: { count: 4 }, editable: false });
 
     this.tools = [
       {

@@ -97,9 +97,13 @@ function createXSpreadsheetInstance(
   const { column, row } = options;
 
   return new XSpreadsheet(elementOrSelector, {
-    mode: options.editable === true ? 'edit' : 'read',
+    mode: 'edit',
     showToolbar: false,
     showBottomBar: false,
+    ...['canCut', 'canCopy', 'canPaste', 'canCellEdit'].reduce(
+      (prev, key) => ({ ...prev, [key]: options.editable }),
+      {},
+    ),
     view: {
       width: () => el.clientWidth,
       height: () => el.clientHeight,
