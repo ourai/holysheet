@@ -155,11 +155,11 @@ class Table extends AbstractTable implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const { coordinate, span = [], ...others } = omit(cell, [
-        '__meta',
-        'id',
-        'mergedCoord',
-      ]) as CellData;
+      const {
+        coordinate,
+        span = [],
+        ...others
+      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate!;
 
@@ -658,7 +658,7 @@ class Table extends AbstractTable implements ITable {
           if (mergedCoord) {
             const [sci, sri, eci] = this.merged[mergedCoord!];
             const newRowSpan = rowSpan + count;
-            const range: TableRange = [sci, sri, eci, sci + newRowSpan];
+            const range: TableRange = [sci, sri, eci, sri + newRowSpan];
             const newMergedCoord = getTitleCoord(...range);
 
             this.cells[cellId].span = [colSpan, newRowSpan];
