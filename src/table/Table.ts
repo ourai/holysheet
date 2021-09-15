@@ -151,64 +151,57 @@ class Table extends AbstractTable implements ITable {
   }
 
   public fill(cells: CellData[]): void {
-    const needRemove = Object.keys(this.cells).length > cells.length;
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
+    const rows: Record<string, CellData[]> = {};
 
     cells.forEach(cell => {
-      const { coordinate, span = [], ...others } = omit(cell, [
-        '__meta',
-        'id',
-        'mergedCoord',
-      ]) as CellData;
+      const [_, rowIndexOrTitle] = cell.coordinate!;
 
-      const [colIndexOrTitle, rowIndexOrTitle] = coordinate!;
+      const rowIndex = isString(rowIndexOrTitle)
+        ? Number(rowIndexOrTitle) - 1
+        : (rowIndexOrTitle as number);
 
-      let colIndex: number;
-      let rowIndex: number;
-
-      if (isString(colIndexOrTitle) && isString(rowIndexOrTitle)) {
-        colIndex = getColumnIndex(colIndexOrTitle as string);
-        rowIndex = Number(rowIndexOrTitle) - 1;
-      } else {
-        colIndex = colIndexOrTitle as number;
-        rowIndex = rowIndexOrTitle as number;
+      if (rows[rowIndex] === undefined) {
+        rows[rowIndex] = [];
       }
 
-      const { id } = this.getCell(colIndex, rowIndex)!;
+      rows[rowIndex].push(cell);
+    });
 
-      if (needRemove) {
-        const [colSpan = 0, rowSpan = 0] = span;
+    Object.keys(rows).forEach(rowIndexKey => {
+      const rowIndex = Number(rowIndexKey);
+      const cells = rows[rowIndex];
+      const needRemove = this.rows[rowIndex].cells.length > cells.length;
 
-        if (colSpan > 0 || rowSpan > 0) {
-          const range: TableRange = [colIndex, rowIndex, colIndex + colSpan, rowIndex + rowSpan];
-          const mergedCoord = getTitleCoord(...range);
+      cells.forEach(cell => {
+        const { coordinate, span = [], ...others } = omit(cell, [
+          '__meta',
+          'id',
+          'mergedCoord',
+        ]) as CellData;
 
-          this.cells[id].span = [colSpan, rowSpan];
-          (this.cells[id] as InternalCell).mergedCoord = mergedCoord;
+        const [colIndexOrTitle] = coordinate!;
+        const colIndex = isString(colIndexOrTitle)
+          ? getColumnIndex(colIndexOrTitle as string)
+          : (colIndexOrTitle as number);
+        const { id } = this.getCell(colIndex, rowIndex)!;
 
-          this.merged[mergedCoord] = range;
+        if (needRemove) {
+          const [colSpan = 0, rowSpan = 0] = span;
 
-          if (colSpan > 0) {
-            const indexArr: number[] = [];
+          if (colSpan > 0 || rowSpan > 0) {
+            const range: TableRange = [colIndex, rowIndex, colIndex + colSpan, rowIndex + rowSpan];
+            const mergedCoord = getTitleCoord(...range);
 
-            let nextColIndex = colIndex + 1;
+            this.cells[id].span = [colSpan, rowSpan];
+            (this.cells[id] as InternalCell).mergedCoord = mergedCoord;
 
-            while (nextColIndex <= colIndex + colSpan) {
-              indexArr.push(nextColIndex);
+            this.merged[mergedCoord] = range;
 
-              nextColIndex++;
-            }
-
-            needRemoveCells.push({ index: rowIndex, cellIndexes: indexArr });
-          }
-
-          if (rowSpan > 0) {
-            let nextRowIndex = rowIndex + 1;
-
-            while (nextRowIndex <= rowIndex + rowSpan) {
+            if (colSpan > 0) {
               const indexArr: number[] = [];
 
-              let nextColIndex = colIndex;
+              let nextColIndex = colIndex + 1;
 
               while (nextColIndex <= colIndex + colSpan) {
                 indexArr.push(nextColIndex);
@@ -216,15 +209,33 @@ class Table extends AbstractTable implements ITable {
                 nextColIndex++;
               }
 
-              needRemoveCells.push({ index: nextRowIndex, cellIndexes: indexArr });
+              needRemoveCells.push({ index: rowIndex, cellIndexes: indexArr });
+            }
 
-              nextRowIndex++;
+            if (rowSpan > 0) {
+              let nextRowIndex = rowIndex + 1;
+
+              while (nextRowIndex <= rowIndex + rowSpan) {
+                const indexArr: number[] = [];
+
+                let nextColIndex = colIndex;
+
+                while (nextColIndex <= colIndex + colSpan) {
+                  indexArr.push(nextColIndex);
+
+                  nextColIndex++;
+                }
+
+                needRemoveCells.push({ index: nextRowIndex, cellIndexes: indexArr });
+
+                nextRowIndex++;
+              }
             }
           }
         }
-      }
 
-      this.setCellProperties(id, others);
+        this.setCellProperties(id, others);
+      });
     });
 
     if (needRemoveCells.length === 0) {
