@@ -389,7 +389,7 @@ class Table extends AbstractTable implements ITable {
       return { success: false, message: '请先选择要取消合并的单元格' };
     }
 
-    const startRowIndex = this.selection.range[1];
+    const [startColIndex, startRowIndex, endColIndex] = this.selection.range;
     const rowsInRange = this.getInternalRowsInRange();
     const rows: InternalRow[] = this.createRows(
       startRowIndex,
@@ -408,9 +408,9 @@ class Table extends AbstractTable implements ITable {
       }
 
       row.cells.forEach(cellId => {
-        const { span, mergedCoord, ...pureCell } = this.cells[cellId] as InternalCell;
+        const cell = this.cells[cellId] as InternalCell;
 
-        this.cells[cellId] = pureCell;
+        this.cells[cellId] = cell;
 
         while (rows[ri].cells[targetCellIndex]) {
           targetCellIndex++;
@@ -418,8 +418,10 @@ class Table extends AbstractTable implements ITable {
 
         rows[ri].cells[targetCellIndex] = cellId;
 
-        if (span) {
-          const [colSpan = 0, rowSpan = 0] = span;
+        const [colIndex] = this.getCellCoordinate(cellId) as [number, number];
+
+        if (cell.span && colIndex >= startColIndex && colIndex <= endColIndex) {
+          const [colSpan = 0, rowSpan = 0] = cell.span;
 
           if (colSpan > 0) {
             const cellIds = this.createCells(
@@ -456,8 +458,11 @@ class Table extends AbstractTable implements ITable {
             }
           }
 
-          if (mergedCoord) {
-            delete this.merged[mergedCoord];
+          delete this.cells[cellId].span;
+
+          if (cell.mergedCoord) {
+            delete (this.cells[cellId] as InternalCell).mergedCoord;
+            delete this.merged[cell.mergedCoord];
           }
 
           this.markCellAsModified(cellId);
@@ -472,6 +477,8 @@ class Table extends AbstractTable implements ITable {
 
       Object.keys(copyProps).forEach(prop => (rows[ri][prop] = copyProps[prop]));
     });
+
+    rows.forEach(row => (row.cells = row.cells.filter(cellId => !!cellId)));
 
     this.rows.splice(this.selection.range[1], rows.length, ...rows);
 
