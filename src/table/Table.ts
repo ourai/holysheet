@@ -300,8 +300,30 @@ class Table extends AbstractTable implements ITable {
     const [sci, sri, eci, eri] = this.selection.range;
     const rowsInRange = this.getInternalRowsInRange();
 
+    let lastRowCellIndex: number;
+
     rowsInRange.forEach((row, ri) => {
+      if (row.cells.length === 0) {
+        return;
+      }
+
       const colSpan = eci - sci;
+
+      let cellIndex = -1;
+
+      lastRowCellIndex = -1;
+
+      for (let idx = 0; idx < row.cells.length; idx++) {
+        const {
+          __meta: { colIndex: cellColIndex },
+        } = this.cells[row.cells[idx]] as InternalCell;
+
+        if (cellColIndex === sci) {
+          lastRowCellIndex = cellIndex = idx;
+
+          break;
+        }
+      }
 
       if (ri === 0) {
         const cellId = row.cells[sci];
@@ -314,9 +336,33 @@ class Table extends AbstractTable implements ITable {
         this.merged[mergedCoord] = [...this.selection!.range];
 
         this.markCellAsModified(cellId);
-        this.removeCells(row.cells.splice(sci + 1, colSpan));
+        this.removeCells(row.cells.splice(cellIndex + 1, colSpan));
       } else {
-        this.removeCells(row.cells.splice(sci, colSpan + 1));
+        let endColCellIndex = cellIndex;
+
+        if (cellIndex === -1) {
+          if ((this.getCellCoordinate(row.cells[0]) as [number, number])[0] > eci) {
+            return;
+          }
+
+          cellIndex = 0;
+        }
+
+        for (let idx = cellIndex; idx < row.cells.length; idx++) {
+          const {
+            span = [],
+            __meta: { colIndex: cellColIndex },
+          } = this.cells[row.cells[idx]] as InternalCell;
+          const [cellColSpan = 0] = span;
+
+          if (cellColIndex + cellColSpan === eci) {
+            endColCellIndex = idx;
+
+            break;
+          }
+        }
+
+        this.removeCells(row.cells.splice(cellIndex, endColCellIndex - cellIndex + 1));
       }
     });
 
