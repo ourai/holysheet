@@ -155,11 +155,11 @@ class Table extends AbstractTable implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
 
     cells.forEach(cell => {
-      const {
-        coordinate,
-        span = [],
-        ...others
-      } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
+      const { coordinate, span = [], ...others } = omit(cell, [
+        '__meta',
+        'id',
+        'mergedCoord',
+      ]) as CellData;
 
       const [colIndexOrTitle, rowIndexOrTitle] = coordinate!;
 
@@ -455,12 +455,8 @@ class Table extends AbstractTable implements ITable {
         }
       }
 
-      if (cellIndex === -1) {
-        return;
-      }
-
       // 在跨列单元格的范围内插入列时需要更新跨列信息
-      if (!toInsert && colOverflow) {
+      if (cellIndex > -1 && !toInsert && colOverflow) {
         const cellId = row.cells[cellIndex];
         const { span = [], mergedCoord } = this.cells[cellId] as InternalCell;
         const [colSpan = 0, rowSpan = 0] = span;
@@ -483,7 +479,15 @@ class Table extends AbstractTable implements ITable {
 
         inserted.push(...cellIds.map(id => this.getCell(id)!));
 
-        row.cells.splice(cellIndex, 0, ...cellIds);
+        if (cellIndex > -1) {
+          row.cells.splice(cellIndex, 0, ...cellIds);
+        } else {
+          row.cells.push(...cellIds);
+        }
+      }
+
+      if (cellIndex === -1) {
+        return;
       }
 
       row.cells
