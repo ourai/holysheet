@@ -311,8 +311,6 @@ class Table extends AbstractTable implements ITable {
     const [sci, sri, eci, eri] = this.selection.range;
     const rowsInRange = this.getInternalRowsInRange();
 
-    let lastRowCellIndex: number;
-
     rowsInRange.forEach((row, ri) => {
       if (row.cells.length === 0) {
         return;
@@ -322,22 +320,20 @@ class Table extends AbstractTable implements ITable {
 
       let cellIndex = -1;
 
-      lastRowCellIndex = -1;
-
       for (let idx = 0; idx < row.cells.length; idx++) {
         const {
           __meta: { colIndex: cellColIndex },
         } = this.cells[row.cells[idx]] as InternalCell;
 
         if (cellColIndex === sci) {
-          lastRowCellIndex = cellIndex = idx;
+          cellIndex = idx;
 
           break;
         }
       }
 
       if (ri === 0) {
-        const cellId = row.cells[sci];
+        const cellId = row.cells[cellIndex];
         const cell = this.cells[cellId] as InternalCell;
         const mergedCoord = getTitleCoord(sci, sri, eci, eri);
 
@@ -483,7 +479,10 @@ class Table extends AbstractTable implements ITable {
     this.rows.splice(this.selection.range[1], rows.length, ...rows);
 
     this.clearSelection();
-    this.cellInserted(inserted);
+
+    if (inserted.length > 0) {
+      this.cellInserted(inserted);
+    }
 
     return { success: true };
   }
@@ -565,13 +564,16 @@ class Table extends AbstractTable implements ITable {
         );
     });
 
-    this.cellInserted(inserted);
+    if (inserted.length > 0) {
+      this.cellInserted(inserted);
+    }
 
     return { success: true };
   }
 
   public deleteColumns(startColIndex: number, count?: number): Result {
     const resolvedCount = count === undefined ? this.getColumnCount() - startColIndex : count;
+    const inserted: TableCell[] = [];
 
     this.columns.splice(startColIndex, resolvedCount);
 
@@ -640,6 +642,7 @@ class Table extends AbstractTable implements ITable {
                   this.merged[newMergedCoord] = range;
                 }
 
+                inserted.push(this.getCell(newCellId)!);
                 this.removeCells(row.cells.splice(cellIndex, 1, newCellId));
               }
             } else {
@@ -677,6 +680,10 @@ class Table extends AbstractTable implements ITable {
     } else {
       this.rows.forEach(row => this.removeCells(row.cells.splice(0)));
       this.merged = {};
+    }
+
+    if (inserted.length > 0) {
+      this.cellInserted(inserted);
     }
 
     return { success: true };
@@ -753,7 +760,9 @@ class Table extends AbstractTable implements ITable {
       .slice(rowIndex, rowIndex + count)
       .forEach(({ cells }) => inserted.push(...cells.map(id => this.getCell(id)!)));
 
-    this.cellInserted(inserted);
+    if (inserted.length > 0) {
+      this.cellInserted(inserted);
+    }
 
     return { success: true };
   }
@@ -762,6 +771,7 @@ class Table extends AbstractTable implements ITable {
     const resolvedCount = count === undefined ? this.getRowCount() - startRowIndex : count;
     const endRowIndex = startRowIndex + resolvedCount - 1;
     const overflowCells = this.getRowOverflowCells(startRowIndex, endRowIndex);
+    const inserted: TableCell[] = [];
 
     if (overflowCells.length > 0) {
       const overflowRowIndex = endRowIndex + 1;
@@ -796,6 +806,8 @@ class Table extends AbstractTable implements ITable {
         }
 
         cells[colIndex] = newCellId;
+
+        inserted.push(this.getCell(newCellId)!);
       });
 
       overflowCellRow.cells = cells.filter(cellId => !!cellId) as CellId[];
@@ -880,6 +892,10 @@ class Table extends AbstractTable implements ITable {
       });
     } else {
       this.merged = {};
+    }
+
+    if (inserted.length > 0) {
+      this.cellInserted(inserted);
     }
 
     return { success: true };
