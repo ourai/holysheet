@@ -51,7 +51,7 @@ interface ITable {
   getCell(colIndex: number, rowIndex: number): TableCell | undefined;
   getCell(colTitle: string, rowTitle: string): TableCell | undefined;
   getCellCoordinate(id: CellId, title?: boolean): CellCoordinate;
-  setCellProperties(id: CellId, properties: Record<string, any>): void;
+  setCellProperties(id: CellId, properties: Record<string, any>, override?: boolean): void;
   isCellModified(id: CellId): boolean;
   getColumnCount(): number;
   getColumnWidth(indexOrTitle: number | string): number | undefined;

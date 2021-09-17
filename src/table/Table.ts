@@ -137,17 +137,27 @@ class Table extends AbstractTable implements ITable {
     (this.cells[id] as InternalCell).style = style;
   }
 
-  public setCellProperties(id: CellId, properties: Record<string, any>): void {
-    const {
-      text = this.getCellText(id),
-      style = this.getCellStyle(id),
-      ...others
-    } = omit(properties, ['mergedCoord']);
+  public setCellProperties(
+    id: CellId,
+    properties: Record<string, any>,
+    override: boolean = false,
+  ): void {
+    const reservedKeys = ['mergedCoord'];
+    const { text = this.getCellText(id), style = this.getCellStyle(id), ...others } = omit(
+      properties,
+      reservedKeys,
+    );
 
     this.setCellText(id, text);
     this.setCellStyle(id, style);
 
-    super.setCellProperties(id, others);
+    const { mergedCoord } = this.cells[id] as InternalCell;
+
+    if (mergedCoord) {
+      others.mergedCoord = mergedCoord;
+    }
+
+    super.setCellProperties(id, others, override);
   }
 
   public fill(cells: CellData[]): void {

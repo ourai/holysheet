@@ -1,4 +1,13 @@
-import { noop, isNumber, isString, generateRandomId, includes, omit, clone } from '@ntks/toolbox';
+import {
+  noop,
+  isNumber,
+  isString,
+  generateRandomId,
+  includes,
+  pick,
+  omit,
+  clone,
+} from '@ntks/toolbox';
 
 import {
   CellId,
@@ -188,8 +197,13 @@ class AbstractTable implements ITable {
     return title ? [getColumnTitle(colIndex), `${rowIndex + 1}`] : [colIndex, rowIndex];
   }
 
-  public setCellProperties(id: CellId, properties: Record<string, any>): void {
-    const props = omit(properties, ['__meta', 'id', 'span']);
+  public setCellProperties(
+    id: CellId,
+    properties: Record<string, any>,
+    override: boolean = false,
+  ): void {
+    const reservedKeys = ['__meta', 'id', 'span'];
+    const props = omit(properties, reservedKeys);
     const propKeys = Object.keys(props);
 
     if (propKeys.length === 0) {
@@ -198,7 +212,11 @@ class AbstractTable implements ITable {
 
     const cell = this.cells[id];
 
-    propKeys.forEach(key => (cell[key] = props[key]));
+    if (override) {
+      this.cells[id] = { ...pick(cell, reservedKeys), ...props };
+    } else {
+      propKeys.forEach(key => (cell[key] = props[key]));
+    }
 
     this.markCellAsModified(id);
 
