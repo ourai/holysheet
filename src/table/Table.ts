@@ -467,8 +467,8 @@ class Table extends AbstractTable implements ITable {
           delete this.cells[cellId].span;
 
           if (cell.mergedCoord) {
-            delete (this.cells[cellId] as InternalCell).mergedCoord;
             delete this.merged[cell.mergedCoord];
+            delete (this.cells[cellId] as InternalCell).mergedCoord;
           }
 
           this.markCellAsModified(cellId);
