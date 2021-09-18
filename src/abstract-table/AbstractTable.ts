@@ -238,6 +238,10 @@ class AbstractTable implements ITable {
   public setColumnWidth(indexOrTitle: number | string, width: number | 'auto'): void {
     const colIndex = this.resolveColumnIndex(indexOrTitle);
 
+    if (!this.columns[colIndex]) {
+      return;
+    }
+
     if (isNumber(width)) {
       this.columns[colIndex].width = width as number;
     } else {
@@ -259,6 +263,10 @@ class AbstractTable implements ITable {
 
   public setRowHeight(indexOrTitle: number | string, height: number | 'auto'): void {
     const rowIndex = this.resolveRowIndex(indexOrTitle);
+
+    if (!this.rows[rowIndex]) {
+      return;
+    }
 
     if (isNumber(height)) {
       this.rows[rowIndex].height = height as number;
