@@ -164,8 +164,18 @@ class Table extends AbstractTable implements ITable {
     const needRemoveCells: { index: number; cellIndexes: number[] }[] = [];
     const rows: Record<string, CellData[]> = {};
 
+    let maxColIndex = 0;
+
     cells.forEach(cell => {
-      const [_, rowIndexOrTitle] = cell.coordinate!;
+      const [colIndexOrTitle, rowIndexOrTitle] = cell.coordinate!;
+
+      const colIndex = isString(colIndexOrTitle)
+        ? getColumnIndex(colIndexOrTitle as string)
+        : (colIndexOrTitle as number);
+
+      if (colIndex > maxColIndex) {
+        maxColIndex = colIndex;
+      }
 
       const rowIndex = isString(rowIndexOrTitle)
         ? Number(rowIndexOrTitle) - 1
@@ -177,6 +187,20 @@ class Table extends AbstractTable implements ITable {
 
       rows[rowIndex].push(cell);
     });
+
+    const currentColCount = this.getColumnCount();
+    const targetColCount = maxColIndex + 1;
+
+    if (currentColCount < targetColCount) {
+      this.insertColumns(currentColCount, targetColCount - currentColCount);
+    }
+
+    const currentRowCount = this.getRowCount();
+    const targetRowCount = Object.keys(rows).length;
+
+    if (currentRowCount < targetRowCount) {
+      this.insertRows(currentRowCount, targetRowCount - currentRowCount);
+    }
 
     Object.keys(rows).forEach(rowIndexKey => {
       const rowIndex = Number(rowIndexKey);
