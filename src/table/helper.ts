@@ -1,4 +1,6 @@
-import { getColumnTitle, getColumnIndex } from '../abstract-table';
+import { isString } from '@ntks/toolbox';
+
+import { CellCoordinate, getColumnTitle, getColumnIndex } from '../abstract-table';
 import { TableRange } from './typing';
 
 function getTitleCoord(
@@ -28,4 +30,12 @@ function getIndexCoord(titleCoord: string): TableRange {
   return range as TableRange;
 }
 
-export { getTitleCoord, getIndexCoord };
+function getColumnIndexFromCoordinate(coordinate: CellCoordinate): number {
+  const [colIndexOrTitle] = coordinate;
+
+  return isString(colIndexOrTitle)
+    ? getColumnIndex(colIndexOrTitle as string)
+    : (colIndexOrTitle as number);
+}
+
+export { getTitleCoord, getIndexCoord, getColumnIndexFromCoordinate };

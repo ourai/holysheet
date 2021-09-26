@@ -6,6 +6,7 @@ export {
   TableCell,
   TableColumn,
   TableRow,
+  CellCoordinate,
   ITable,
   TableInitializer,
 } from './typing';

@@ -17,7 +17,7 @@ import {
   ITable,
   TableInitializer,
 } from './typing';
-import { getTitleCoord, getIndexCoord } from './helper';
+import { getTitleCoord, getIndexCoord, getColumnIndexFromCoordinate } from './helper';
 
 class Table extends AbstractTable implements ITable {
   private readonly cellInserted: (cells: TableCell[]) => void;
@@ -143,10 +143,11 @@ class Table extends AbstractTable implements ITable {
     override: boolean = false,
   ): void {
     const reservedKeys = ['mergedCoord'];
-    const { text = this.getCellText(id), style = this.getCellStyle(id), ...others } = omit(
-      properties,
-      reservedKeys,
-    );
+    const {
+      text = this.getCellText(id),
+      style = this.getCellStyle(id),
+      ...others
+    } = omit(properties, reservedKeys);
 
     this.setCellText(id, text);
     this.setCellStyle(id, style);
@@ -167,16 +168,13 @@ class Table extends AbstractTable implements ITable {
     let maxColIndex = 0;
 
     cells.forEach(cell => {
-      const [colIndexOrTitle, rowIndexOrTitle] = cell.coordinate!;
-
-      const colIndex = isString(colIndexOrTitle)
-        ? getColumnIndex(colIndexOrTitle as string)
-        : (colIndexOrTitle as number);
+      const colIndex = getColumnIndexFromCoordinate(cell.coordinate!);
 
       if (colIndex > maxColIndex) {
         maxColIndex = colIndex;
       }
 
+      const rowIndexOrTitle = cell.coordinate![1];
       const rowIndex = isString(rowIndexOrTitle)
         ? Number(rowIndexOrTitle) - 1
         : (rowIndexOrTitle as number);
@@ -204,20 +202,21 @@ class Table extends AbstractTable implements ITable {
 
     Object.keys(rows).forEach(rowIndexKey => {
       const rowIndex = Number(rowIndexKey);
-      const cells = rows[rowIndex];
+      const cells = rows[rowIndex].sort((a, b) =>
+        getColumnIndexFromCoordinate(a.coordinate!) > getColumnIndexFromCoordinate(b.coordinate!)
+          ? -1
+          : 1,
+      ); // ensure that cell sorted by column index descending order
       const needRemove = this.rows[rowIndex].cells.length > cells.length;
 
       cells.forEach(cell => {
-        const { coordinate, span = [], ...others } = omit(cell, [
-          '__meta',
-          'id',
-          'mergedCoord',
-        ]) as CellData;
+        const {
+          coordinate,
+          span = [],
+          ...others
+        } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
 
-        const [colIndexOrTitle] = coordinate!;
-        const colIndex = isString(colIndexOrTitle)
-          ? getColumnIndex(colIndexOrTitle as string)
-          : (colIndexOrTitle as number);
+        const colIndex = getColumnIndexFromCoordinate(coordinate!);
         const { id } = this.getCell(colIndex, rowIndex)!;
 
         if (needRemove) {
