@@ -23,39 +23,6 @@ interface RowOptions {
   height?: number;
 }
 
-interface ContextMenuItem {}
-
-type CellCreator = () => Omit<TableCell, 'id'>;
-type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
-
-type CellResolver = (cell: TableCell) => Partial<CellData>;
-
-interface SpreadsheetHooks {
-  beforeSheetActivate?: (prev: ISheet) => boolean;
-  sheetActivated?: (current: ISheet, prev: ISheet) => void;
-  beforeSheetRender?: () => boolean;
-  sheetRendered?: () => void;
-}
-
-interface SpreadsheetOptions extends SpreadsheetHooks {
-  el?: MountEl;
-  column?: ColumnOptions;
-  row?: RowOptions;
-  style?: SheetStyle;
-  contextMenu?: ContextMenuItem[];
-  editable?: boolean;
-  cellCreator?: CellCreator;
-  rowCreator?: RowCreator;
-  cellResolver?: CellResolver;
-}
-
-type ResolvedOptions = Required<
-  Omit<
-    SpreadsheetOptions,
-    'el' | 'cellCreator' | 'rowCreator' | 'cellResolver' | keyof SpreadsheetHooks
-  >
->;
-
 interface Spreadsheet {
   mount(elementOrSelector: MountEl): void;
   render(): void;
@@ -79,9 +46,57 @@ interface Spreadsheet {
   destroy(): void;
 }
 
+type ContextMenuTriggerPosition = 'col-title' | 'row-title' | 'cell';
+
+type ContextMenuItemAsserter = (
+  context: Spreadsheet,
+  position: ContextMenuTriggerPosition,
+) => boolean;
+
+interface ContextMenuItem {
+  key: string;
+  title: string;
+  available?: boolean | ContextMenuItemAsserter;
+  handler?: (context: Spreadsheet, data: any) => any;
+}
+
+type CellCreator = () => Omit<TableCell, 'id'>;
+type RowCreator = () => Omit<InternalRow, 'id' | 'cells'>;
+
+type CellResolver = (cell: TableCell) => Partial<CellData>;
+
+interface SpreadsheetHooks {
+  beforeSheetActivate?: (prev: ISheet) => boolean;
+  sheetActivated?: (current: ISheet, prev: ISheet) => void;
+  beforeSheetRender?: () => boolean;
+  sheetRendered?: () => void;
+}
+
+interface SpreadsheetOptions extends SpreadsheetHooks {
+  el?: MountEl;
+  column?: ColumnOptions;
+  row?: RowOptions;
+  style?: SheetStyle;
+  contextMenu?: ContextMenuItem[];
+  editable?: boolean;
+  hideContextMenu?: boolean;
+  cellCreator?: CellCreator;
+  rowCreator?: RowCreator;
+  cellResolver?: CellResolver;
+}
+
+type ResolvedOptions = Required<
+  Omit<
+    SpreadsheetOptions,
+    'el' | 'cellCreator' | 'rowCreator' | 'cellResolver' | keyof SpreadsheetHooks
+  >
+>;
+
 export {
   MountEl,
   SpreadsheetEvents,
+  ContextMenuTriggerPosition,
+  ContextMenuItemAsserter,
   ContextMenuItem,
   CellCreator,
   RowCreator,

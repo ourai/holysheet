@@ -1,10 +1,11 @@
-import { isString } from '@ntks/toolbox';
+import { isString, isFunction, generateRandomId } from '@ntks/toolbox';
 import XSpreadsheet, { CellStyle as XSpreadsheetCellStyle } from '@wotaware/x-spreadsheet';
 
 import { CellStyle, Result } from '../sheet';
 
 import {
   MountEl,
+  ContextMenuItemAsserter,
   ContextMenuItem,
   SpreadsheetOptions,
   ResolvedOptions,
@@ -20,57 +21,68 @@ function handleOperationResult(result: Result): void {
   }
 }
 
-function getDefaultContextMenuItems(inst: any): ContextMenuItem[] {
+function getDefaultContextMenuItems(): ContextMenuItem[] {
   return [
     {
       key: 'insert-column-left',
-      title: () => '前面添加列',
-      available: mode => mode === 'col-title',
-      handler: data => handleOperationResult(inst.insertColumns(data.selector.range.sci)),
+      title: '前面添加列',
+      available: (_, mode) => mode === 'col-title',
+      handler: (context, data) =>
+        handleOperationResult(context.insertColumns(data.selector.range.sci)),
     },
     {
       key: 'insert-column-right',
-      title: () => '后面添加列',
-      available: mode => mode === 'col-title',
-      handler: data => handleOperationResult(inst.insertColumns(data.selector.range.sci + 1)),
+      title: '后面添加列',
+      available: (_, mode) => mode === 'col-title',
+      handler: (context, data) =>
+        handleOperationResult(context.insertColumns(data.selector.range.sci + 1)),
     },
     {
       key: 'delete-selected-columns',
-      title: () => '删除列',
-      available: mode => mode === 'col-title' && inst.table.getColumnCount() > 1,
-      handler: () => handleOperationResult(inst.deleteColumns()),
+      title: '删除列',
+      available: (context, mode) =>
+        mode === 'col-title' && (context as any).table.getColumnCount() > 1,
+      handler: context => handleOperationResult(context.deleteColumns()),
     },
     {
       key: 'insert-row-above',
-      title: () => '上面添加行',
-      available: mode => mode === 'row-title',
-      handler: data => handleOperationResult(inst.insertRows(data.selector.range.sri)),
+      title: '上面添加行',
+      available: (_, mode) => mode === 'row-title',
+      handler: (context, data) =>
+        handleOperationResult(context.insertRows(data.selector.range.sri)),
     },
     {
       key: 'insert-row-below',
-      title: () => '下面添加行',
-      available: mode => mode === 'row-title',
-      handler: data => handleOperationResult(inst.insertRows(data.selector.range.sri + 1)),
+      title: '下面添加行',
+      available: (_, mode) => mode === 'row-title',
+      handler: (context, data) =>
+        handleOperationResult(context.insertRows(data.selector.range.sri + 1)),
     },
     {
       key: 'delete-selected-rows',
-      title: () => '删除行',
-      available: mode => mode === 'row-title' && inst.table.getRowCount() > 1,
-      handler: () => handleOperationResult(inst.deleteRows()),
+      title: '删除行',
+      available: (context, mode) =>
+        mode === 'row-title' && (context as any).table.getRowCount() > 1,
+      handler: context => handleOperationResult(context.deleteRows()),
     },
   ];
 }
 
-function resolveOptions(
-  inst: Spreadsheet,
-  { column = {}, row = {}, style = {}, contextMenu, editable }: SpreadsheetOptions,
-): ResolvedOptions {
+function resolveOptions({
+  column = {},
+  row = {},
+  style = {},
+  contextMenu,
+  editable,
+  hideContextMenu,
+}: SpreadsheetOptions): ResolvedOptions {
   return {
     column: { count: column.count || DEFAULT_COL_COUNT, width: column.width || 100 },
     row: { count: row.count || DEFAULT_ROW_COUNT, height: row.height || 30 },
     style,
-    contextMenu: contextMenu || getDefaultContextMenuItems(inst),
+    contextMenu: contextMenu || getDefaultContextMenuItems(),
     editable: editable !== false,
+    hideContextMenu: !!hideContextMenu,
   };
 }
 
@@ -89,6 +101,7 @@ function resolveCellStyle(style: CellStyle): XSpreadsheetCellStyle {
 function createXSpreadsheetInstance(
   elementOrSelector: MountEl,
   options: ResolvedOptions,
+  context: Spreadsheet,
 ): XSpreadsheet {
   const el = isString(elementOrSelector)
     ? document.querySelector(elementOrSelector as string)!
@@ -100,6 +113,7 @@ function createXSpreadsheetInstance(
     mode: 'edit',
     showToolbar: false,
     showBottomBar: false,
+    showContextmenu: !options.hideContextMenu,
     ...['canCut', 'canCopy', 'canPaste', 'canCellEdit'].reduce(
       (prev, key) => ({ ...prev, [key]: options.editable }),
       {},
@@ -119,7 +133,18 @@ function createXSpreadsheetInstance(
       height: row.height,
     },
     style: options.style,
-    contextMenuItems: options.contextMenu,
+    contextMenuItems: options.contextMenu.map(menuItem => ({
+      key: `${generateRandomId('HolysheetContextMenuItem')}-${menuItem.key}`,
+      title: () => menuItem.title,
+      available: isFunction(menuItem.available)
+        ? mode =>
+            (menuItem.available as ContextMenuItemAsserter)(
+              context,
+              mode === 'range' ? 'cell' : mode,
+            )
+        : menuItem.available,
+      handler: data => (menuItem.handler ? menuItem.handler(context, data) : undefined),
+    })),
   } as any);
 }
 

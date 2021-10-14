@@ -163,7 +163,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   }
 
   private createXSpreadsheetInstance(elementOrSelector: MountEl): void {
-    const xs = createXSpreadsheetInstance(elementOrSelector, this.options);
+    const xs = createXSpreadsheetInstance(elementOrSelector, this.options, this);
 
     xs.on('cell-selected', (_, rowIndex, colIndex) => this.handleCellChoose(colIndex, rowIndex));
 
@@ -205,7 +205,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
   }: SpreadsheetOptions = {}) {
     super();
 
-    this.options = resolveOptions(this, others);
+    this.options = resolveOptions(others);
 
     this.cellCreator = cellCreator;
     this.rowCreator = rowCreator;
