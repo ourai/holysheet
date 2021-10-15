@@ -66,7 +66,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.emit('row-update', row);
   }
 
-  private setCurrentSheet(index: number = 0): void {
+  private setCurrentSheet(index: number): void {
     const prevSheet = this.sheet;
 
     if (this.beforeSheetActivate(prevSheet) === false) {
@@ -311,7 +311,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     this.sheets = resolved;
 
-    this.setCurrentSheet();
+    this.setCurrentSheet(this.options.sheetIndex);
     this.emit(
       'change',
       resolved.map(sheet => ({ ...sheet.getExtra(), id: sheet.getId(), name: sheet.getName() })),

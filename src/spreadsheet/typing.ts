@@ -77,6 +77,7 @@ interface SpreadsheetOptions extends SpreadsheetHooks {
   column?: ColumnOptions;
   row?: RowOptions;
   style?: SheetStyle;
+  sheetIndex?: number;
   contextMenu?: ContextMenuItem[];
   editable?: boolean;
   hideContextMenu?: boolean;

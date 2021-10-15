@@ -75,6 +75,7 @@ function resolveOptions({
   contextMenu,
   editable,
   hideContextMenu,
+  sheetIndex,
 }: SpreadsheetOptions): ResolvedOptions {
   return {
     column: { count: column.count || DEFAULT_COL_COUNT, width: column.width || 100 },
@@ -83,6 +84,7 @@ function resolveOptions({
     contextMenu: contextMenu || getDefaultContextMenuItems(),
     editable: editable !== false,
     hideContextMenu: !!hideContextMenu,
+    sheetIndex: sheetIndex || 0,
   };
 }
 
