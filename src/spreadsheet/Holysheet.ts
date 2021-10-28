@@ -278,7 +278,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
     this.sheetRenderer();
   }
 
-  public setSheets(sheets: SheetData[]): void {
+  public setSheets(sheets: SheetData[], activeSheetIndex: number = this.options.sheetIndex): void {
     const sheetMap: Record<string, ISheet> = this.sheets.reduce(
       (prev, sheet) => ({ ...prev, [sheet.getId()]: sheet }),
       {},
@@ -311,7 +311,7 @@ class Holysheet extends EventEmitter implements Spreadsheet {
 
     this.sheets = resolved;
 
-    this.setCurrentSheet(this.options.sheetIndex);
+    this.setCurrentSheet(activeSheetIndex);
     this.emit(
       'change',
       resolved.map(sheet => ({ ...sheet.getExtra(), id: sheet.getId(), name: sheet.getName() })),

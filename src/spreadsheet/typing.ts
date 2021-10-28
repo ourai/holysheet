@@ -26,7 +26,7 @@ interface RowOptions {
 interface Spreadsheet {
   mount(elementOrSelector: MountEl): void;
   render(): void;
-  setSheets(sheets: SheetData[]): void;
+  setSheets(sheets: SheetData[], activeSheetIndex?: number): void;
   getSheet(): ISheet;
   changeSheet(index: number): void;
   getSelectedRows(): TableRow[];
