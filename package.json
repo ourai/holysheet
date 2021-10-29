@@ -34,7 +34,7 @@
   "dependencies": {
     "@ntks/event-emitter": "0.0.0",
     "@ntks/toolbox": "0.0.6",
-    "@wotaware/x-spreadsheet": "0.0.3"
+    "@wotaware/x-spreadsheet": "0.0.4"
   },
   "devDependencies": {
     "@ntks/eslint-config": "0.0.0",
