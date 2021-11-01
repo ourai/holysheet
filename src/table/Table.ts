@@ -880,7 +880,10 @@ class Table extends AbstractTable implements ITable {
       if (startRowIndex > 0) {
         let noRowSpanCellRowIndex = startRowIndex - 1;
 
-        while (this.rows[noRowSpanCellRowIndex].cells.length !== this.getColumnCount()) {
+        while (
+          noRowSpanCellRowIndex > 0 &&
+          this.rows[noRowSpanCellRowIndex].cells.length !== this.getColumnCount()
+        ) {
           noRowSpanCellRowIndex--;
         }
 
