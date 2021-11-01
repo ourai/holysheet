@@ -22,6 +22,8 @@ import { getTitleCoord, getIndexCoord, getColumnIndexFromCoordinate } from './he
 class Table extends AbstractTable implements ITable {
   private readonly cellInserted: (cells: TableCell[]) => void;
 
+  private modified: boolean = false; // whether structure of table modified
+
   private selection: TableSelection | null = null;
 
   private merged: Record<string, TableRange> = {};
@@ -143,11 +145,10 @@ class Table extends AbstractTable implements ITable {
     override: boolean = false,
   ): void {
     const reservedKeys = ['mergedCoord'];
-    const {
-      text = this.getCellText(id),
-      style = this.getCellStyle(id),
-      ...others
-    } = omit(properties, reservedKeys);
+    const { text = this.getCellText(id), style = this.getCellStyle(id), ...others } = omit(
+      properties,
+      reservedKeys,
+    );
 
     this.setCellText(id, text);
     this.setCellStyle(id, style);
@@ -207,14 +208,19 @@ class Table extends AbstractTable implements ITable {
           ? -1
           : 1,
       ); // ensure that cell sorted by column index descending order
-      const needRemove = this.rows[rowIndex].cells.length > cells.length;
+
+      let needRemove = this.rows[rowIndex].cells.length > cells.length;
+
+      if (!needRemove && !this.modified) {
+        needRemove = cells.some(({ span = [] }) => span[0] || span[1]);
+      }
 
       cells.forEach(cell => {
-        const {
-          coordinate,
-          span = [],
-          ...others
-        } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
+        const { coordinate, span = [], ...others } = omit(cell, [
+          '__meta',
+          'id',
+          'mergedCoord',
+        ]) as CellData;
 
         const colIndex = getColumnIndexFromCoordinate(coordinate!);
         const { id } = this.getCell(colIndex, rowIndex)!;
@@ -270,6 +276,8 @@ class Table extends AbstractTable implements ITable {
         this.setCellProperties(id, others);
       });
     });
+
+    this.modified = true;
 
     if (needRemoveCells.length === 0) {
       return;
@@ -410,6 +418,8 @@ class Table extends AbstractTable implements ITable {
 
     this.clearSelection();
 
+    this.modified = true;
+
     return { success: true };
   }
 
@@ -513,6 +523,8 @@ class Table extends AbstractTable implements ITable {
 
     this.clearSelection();
 
+    this.modified = true;
+
     if (inserted.length > 0) {
       this.cellInserted(inserted);
     }
@@ -596,6 +608,8 @@ class Table extends AbstractTable implements ITable {
           ),
         );
     });
+
+    this.modified = true;
 
     if (inserted.length > 0) {
       this.cellInserted(inserted);
@@ -715,6 +729,8 @@ class Table extends AbstractTable implements ITable {
       this.merged = {};
     }
 
+    this.modified = true;
+
     if (inserted.length > 0) {
       this.cellInserted(inserted);
     }
@@ -792,6 +808,8 @@ class Table extends AbstractTable implements ITable {
     this.rows
       .slice(rowIndex, rowIndex + count)
       .forEach(({ cells }) => inserted.push(...cells.map(id => this.getCell(id)!)));
+
+    this.modified = true;
 
     if (inserted.length > 0) {
       this.cellInserted(inserted);
@@ -926,6 +944,8 @@ class Table extends AbstractTable implements ITable {
     } else {
       this.merged = {};
     }
+
+    this.modified = true;
 
     if (inserted.length > 0) {
       this.cellInserted(inserted);
