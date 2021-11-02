@@ -207,7 +207,7 @@ class Table extends AbstractTable implements ITable {
       const cells = rows[rowIndex].sort((a, b) =>
         getColumnIndexFromCoordinate(a.coordinate!) > getColumnIndexFromCoordinate(b.coordinate!)
           ? -1
-          : 0,
+          : 1,
       ); // ensure that cell sorted by column index descending order
 
       let needRemove = this.rows[rowIndex].cells.length > cells.length;
@@ -244,7 +244,7 @@ class Table extends AbstractTable implements ITable {
               let nextColIndex = colIndex + 1;
 
               while (nextColIndex <= colIndex + colSpan) {
-                indexArr.push(nextColIndex);
+                indexArr.unshift(nextColIndex);
 
                 nextColIndex++;
               }
@@ -261,7 +261,7 @@ class Table extends AbstractTable implements ITable {
                 let nextColIndex = colIndex;
 
                 while (nextColIndex <= colIndex + colSpan) {
-                  indexArr.push(nextColIndex);
+                  indexArr.unshift(nextColIndex);
 
                   nextColIndex++;
                 }
@@ -285,11 +285,11 @@ class Table extends AbstractTable implements ITable {
     }
 
     needRemoveCells
-      .sort((a, b) => (a.index < b.index ? -1 : 0))
+      .sort((a, b) => (a.index <= b.index && a.cellIndexes[0] > b.cellIndexes[0] ? -1 : 1))
       .forEach(({ index, cellIndexes }) =>
-        cellIndexes
-          .sort((a, b) => (a > b ? -1 : 0))
-          .forEach(cellIndex => this.removeCells(this.rows[index].cells.splice(cellIndex, 1))),
+        cellIndexes.forEach(cellIndex =>
+          this.removeCells(this.rows[index].cells.splice(cellIndex, 1)),
+        ),
       );
   }
 
@@ -763,7 +763,7 @@ class Table extends AbstractTable implements ITable {
     // 在跨行单元格的范围内插入行时需要更新跨行信息
     if (overflowCells.length > 0) {
       overflowCells
-        .sort((a, b) => (this.cells[a].__meta.colIndex > this.cells[b].__meta.colIndex ? -1 : 0))
+        .sort((a, b) => (this.cells[a].__meta.colIndex > this.cells[b].__meta.colIndex ? -1 : 1))
         .forEach(cellId => {
           const {
             span = [],
