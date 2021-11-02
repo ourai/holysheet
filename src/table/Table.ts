@@ -145,10 +145,11 @@ class Table extends AbstractTable implements ITable {
     override: boolean = false,
   ): void {
     const reservedKeys = ['mergedCoord'];
-    const { text = this.getCellText(id), style = this.getCellStyle(id), ...others } = omit(
-      properties,
-      reservedKeys,
-    );
+    const {
+      text = this.getCellText(id),
+      style = this.getCellStyle(id),
+      ...others
+    } = omit(properties, reservedKeys);
 
     this.setCellText(id, text);
     this.setCellStyle(id, style);
@@ -206,7 +207,7 @@ class Table extends AbstractTable implements ITable {
       const cells = rows[rowIndex].sort((a, b) =>
         getColumnIndexFromCoordinate(a.coordinate!) > getColumnIndexFromCoordinate(b.coordinate!)
           ? -1
-          : 1,
+          : 0,
       ); // ensure that cell sorted by column index descending order
 
       let needRemove = this.rows[rowIndex].cells.length > cells.length;
@@ -216,11 +217,11 @@ class Table extends AbstractTable implements ITable {
       }
 
       cells.forEach(cell => {
-        const { coordinate, span = [], ...others } = omit(cell, [
-          '__meta',
-          'id',
-          'mergedCoord',
-        ]) as CellData;
+        const {
+          coordinate,
+          span = [],
+          ...others
+        } = omit(cell, ['__meta', 'id', 'mergedCoord']) as CellData;
 
         const colIndex = getColumnIndexFromCoordinate(coordinate!);
         const { id } = this.getCell(colIndex, rowIndex)!;
@@ -284,10 +285,10 @@ class Table extends AbstractTable implements ITable {
     }
 
     needRemoveCells
-      .sort((a, b) => (a.index < b.index ? -1 : 1))
+      .sort((a, b) => (a.index < b.index ? -1 : 0))
       .forEach(({ index, cellIndexes }) =>
         cellIndexes
-          .sort((a, b) => (a > b ? -1 : 1))
+          .sort((a, b) => (a > b ? -1 : 0))
           .forEach(cellIndex => this.removeCells(this.rows[index].cells.splice(cellIndex, 1))),
       );
   }
@@ -762,7 +763,7 @@ class Table extends AbstractTable implements ITable {
     // 在跨行单元格的范围内插入行时需要更新跨行信息
     if (overflowCells.length > 0) {
       overflowCells
-        .sort((a, b) => (this.cells[a].__meta.colIndex > this.cells[b].__meta.colIndex ? -1 : 1))
+        .sort((a, b) => (this.cells[a].__meta.colIndex > this.cells[b].__meta.colIndex ? -1 : 0))
         .forEach(cellId => {
           const {
             span = [],
